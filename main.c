@@ -25,7 +25,6 @@ int *pc,                    // 程序计数器,存放下一条需要执行的指
     cycle;
 
 enum{
-    LEA,
     IMM,            // IMM <num> ,将num中的指放入ax
     LI,             // 将地址中的整数放入ax,ax中存放地址
     LC,             // 将地址中的字符放入ax.ax中存放地址
@@ -38,7 +37,10 @@ enum{
     ENT,            
     ADJ,
     LEV,
+    LEA,
     PUSH,
+
+
     OR,
     XOR,
     AND,
@@ -251,6 +253,7 @@ int main(int argc,char *argv[]){
     if((stack = malloc(poolsize)) == NULL){
         printf("can't malloc %d to stack segment\n",poolsize);
     }
+    bp = sp = (int *)((int)stack + poolsize);
 
 
     // 初始化堆栈
