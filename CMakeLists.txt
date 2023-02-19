@@ -13,6 +13,9 @@ find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
 
 set(PROJECT_SOURCES
+        
+        Debug.h
+
         main.cpp
         mainwindow.cpp
         mainwindow.h
@@ -21,6 +24,9 @@ set(PROJECT_SOURCES
         RunResult/RunResult.h
         RunResult/RunResult.cpp
         RunResult/RunResult.ui
+
+        ./File/File.h
+        ./File/File.cpp
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)

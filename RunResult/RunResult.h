@@ -17,6 +17,9 @@ public:
 
     void Show();
     void Hide();
+private slots:
+    void keyPressEvent(QKeyEvent* event);
+
 
 private:
     Ui::RunResult *ui;

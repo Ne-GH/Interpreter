@@ -1,6 +1,6 @@
 #include "mainwindow.h"
 #include "./ui_mainwindow.h"
-
+#include "./Debug.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -8,11 +8,28 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
     
-    auto p = ui;
     setWindowTitle("解释器");
+    
+
+    connect(ui->open_file, &QAction::triggered, [=] {
+        
+    });
+
+    connect(ui->save_file, &QAction::triggered, [=] {
+
+    });
+    
+    connect(ui->close_file, &QAction::triggered, [=] {
+    
+    });
     connect(ui->run_action, &QAction::triggered, [=] {
         _run_window.Show();
     });
+    
+    setCentralWidget(ui->file_edit);
+    
+    ui->open_file->setShortcut(QKeySequence("Ctrl+O"));
+    
 
 }
 

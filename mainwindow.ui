@@ -14,15 +14,19 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QHBoxLayout" name="horizontalLayout">
-    <item>
-     <widget class="QTextEdit" name="file_edit">
-      <property name="documentTitle">
-       <string/>
-      </property>
-     </widget>
-    </item>
-   </layout>
+   <widget class="QTextEdit" name="file_edit">
+    <property name="geometry">
+     <rect>
+      <x>9</x>
+      <y>9</y>
+      <width>256</width>
+      <height>192</height>
+     </rect>
+    </property>
+    <property name="documentTitle">
+     <string/>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menuBar">
    <property name="geometry">
@@ -33,14 +37,23 @@
      <height>21</height>
     </rect>
    </property>
-   <widget class="QMenu" name="menu">
+   <widget class="QMenu" name="operator_menu">
     <property name="title">
      <string>操作</string>
     </property>
     <addaction name="run_action"/>
     <addaction name="asm_action"/>
    </widget>
-   <addaction name="menu"/>
+   <widget class="QMenu" name="file_menu">
+    <property name="title">
+     <string>文件</string>
+    </property>
+    <addaction name="open_file"/>
+    <addaction name="save_file"/>
+    <addaction name="close_file"/>
+   </widget>
+   <addaction name="file_menu"/>
+   <addaction name="operator_menu"/>
   </widget>
   <action name="run_action">
    <property name="text">
@@ -50,6 +63,21 @@
   <action name="asm_action">
    <property name="text">
     <string>汇编</string>
+   </property>
+  </action>
+  <action name="open_file">
+   <property name="text">
+    <string>打开</string>
+   </property>
+  </action>
+  <action name="save_file">
+   <property name="text">
+    <string>保存</string>
+   </property>
+  </action>
+  <action name="close_file">
+   <property name="text">
+    <string>关闭</string>
    </property>
   </action>
  </widget>
