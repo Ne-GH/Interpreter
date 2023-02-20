@@ -17,8 +17,10 @@ public:
     File(QWidget* window);
 
 	
-	void NewFile();
+	Path Create();
 	void Open();
+	void Read();
+	void Read(Path file_path);
 	void Save(std::string_view uptada_text);
 	void Close();
 

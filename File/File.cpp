@@ -12,11 +12,14 @@ std::string_view File::GetContent() {
 }
 File::File(QWidget* window) :_window(window) {  }
 
-void File::NewFile() {
-	std::filesystem::path file_path = QFileDialog::getSaveFileName(_window,
+auto File::Create() -> Path {
+	_path = QFileDialog::getSaveFileName(_window,
 		"创建文件",
 		".", 
 		"C语言文件(*.c);;All Files (*)").toStdString();
+	
+	std::fstream file_system(_path,std::ios::in | std::ios::out | std::ios::trunc);
+	return _path;
 }
 
 void File::Open() {
@@ -27,8 +30,12 @@ void File::Open() {
 		"C 文件(*.c);;\
 		文本文件(*.txt);;\
 		所有文件(*.*)").toStdString();
+	Read();
 
-	qDebug() << _path.string();
+}
+
+void File::Read() {
+	_content.clear();
 	if (_path.empty()) {
 		return;
 	}
@@ -38,10 +45,14 @@ void File::Open() {
 		_content += line + "\n";
 	}
 }
+void File::Read(Path file_path) {
+	_path = file_path;
+	Read();
+}
 
 void File::Save(std::string_view updata_text) {
 	if (_path.empty()) {
-		return;
+		_path = Create();
 	}
 	std::fstream file_system(_path);
 	
