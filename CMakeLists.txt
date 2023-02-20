@@ -20,14 +20,25 @@ set(PROJECT_SOURCES
         mainwindow.cpp
         mainwindow.h
         mainwindow.ui
-        
+
+        File/File.h
+        File/File.cpp
+
         RunResult/RunResult.h
         RunResult/RunResult.cpp
-        RunResult/RunResult.ui
-
-        ./File/File.h
-        ./File/File.cpp
 )
+
+if(WIN)
+    set(PROJECT_SOURCES
+            mainwindow.ui
+            RunResult/RunResult.ui
+            )
+ELSEIF(LINUX)
+    set(PROJECT_SOURCES
+            mainwindow.ui
+            RunResult/runresult.ui
+            )
+endif(WIN)
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(Interpreter
