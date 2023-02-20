@@ -27,6 +27,14 @@ set(PROJECT_SOURCES
         ./RunResult/RunResult.h
         ./RunResult/RunResult.cpp
         ./RunResult/RunResult.ui
+
+        ./Interpreter/Interpreter.h
+        ./Interpreter/Interpreter.cpp
+
+        ./Logs/Log.h
+        ./Logs/Log.cpp
+        ./Logs/Log.ui
+
 )
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")

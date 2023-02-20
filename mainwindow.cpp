@@ -36,6 +36,9 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->run_action, &QAction::triggered, [=] {
         _run_window.Show();
     });
+    connect(ui->log_action, &QAction::triggered, [=] {
+        _log.Show();
+    });
     
    
     
@@ -43,6 +46,8 @@ MainWindow::MainWindow(QWidget *parent)
     ui->open_file->setShortcut(QKeySequence("Ctrl+O"));
     ui->save_file->setShortcut(QKeySequence("Ctrl+S"));
     ui->close_file->setShortcut(QKeySequence("Ctrl+W"));
+
+    _log.AddLog("绑定快捷键完成");
 
 }
 
