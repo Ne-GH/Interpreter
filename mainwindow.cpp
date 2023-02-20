@@ -10,9 +10,6 @@ MainWindow::MainWindow(QWidget* parent)
     setWindowTitle("解释器");
     setCentralWidget(ui->file_edit);
 
-
-    // _file = File(QApplication::activeWindow());
-
     connect(ui->create_file, &QAction::triggered, [=] {
         auto create_path = _file.Create();
 		_file.Read(create_path);

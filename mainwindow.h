@@ -22,9 +22,10 @@ public:
 private:
     Ui::MainWindow *ui;
 
-    RunResult _run_window;
-    File _file;
     Log _log;
+    File _file;
+    RunResult _run_window;
+    Interpreter _interpreter;
     
 };
 #endif // MAINWINDOW_H
