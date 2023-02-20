@@ -1,9 +1,9 @@
 #include "mainwindow.h"
 #include "./ui_mainwindow.h"
 
-MainWindow::MainWindow(QWidget *parent)
+MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
-    , ui(new Ui::MainWindow)
+    , ui(new Ui::MainWindow), _file(this)
 {
     ui->setupUi(this);
 
@@ -11,24 +11,24 @@ MainWindow::MainWindow(QWidget *parent)
     setCentralWidget(ui->file_edit);
 
 
-    _file = new File(QApplication::activeWindow());
+    // _file = File(QApplication::activeWindow());
 
     connect(ui->create_file, &QAction::triggered, [=] {
-        auto create_path = _file->Create();
-		_file->Read(create_path);
+        auto create_path = _file.Create();
+		_file.Read(create_path);
     });
     connect(ui->open_file, &QAction::triggered, [=] {
-        _file->Open();
-        ui->file_edit->setText(_file->GetContent().data());
+        _file.Open();
+        ui->file_edit->setText(_file.GetContent().data());
     });
 
     connect(ui->save_file, &QAction::triggered, [=] {
         std::string string = ui->file_edit->toPlainText().toStdString();
-        _file->Save(string);
+        _file.Save(string);
     });
     
     connect(ui->close_file, &QAction::triggered, [=] {
-        _file->Close();
+        _file.Close();
         ui->file_edit->setText("");
     
     });
