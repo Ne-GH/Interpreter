@@ -34,7 +34,7 @@
      <x>0</x>
      <y>0</y>
      <width>568</width>
-     <height>21</height>
+     <height>32</height>
     </rect>
    </property>
    <widget class="QMenu" name="operator_menu">
@@ -48,10 +48,10 @@
     <property name="title">
      <string>文件</string>
     </property>
+    <addaction name="create_file"/>
     <addaction name="open_file"/>
     <addaction name="save_file"/>
     <addaction name="close_file"/>
-    <addaction name="create_file"/>
    </widget>
    <addaction name="file_menu"/>
    <addaction name="operator_menu"/>
