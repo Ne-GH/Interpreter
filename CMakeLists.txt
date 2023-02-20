@@ -26,19 +26,16 @@ set(PROJECT_SOURCES
 
         RunResult/RunResult.h
         RunResult/RunResult.cpp
+        RunResult/RunResult.ui
 )
 
-if(WIN)
-    set(PROJECT_SOURCES
-            mainwindow.ui
-            RunResult/RunResult.ui
-            )
-ELSEIF(LINUX)
-    set(PROJECT_SOURCES
-            mainwindow.ui
-            RunResult/runresult.ui
-            )
-endif(WIN)
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+    # Windows-specific code
+elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    # Linux-specific code
+else()
+    message(FATAL_ERROR "Unsupported system")
+endif()
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(Interpreter

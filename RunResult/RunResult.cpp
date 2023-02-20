@@ -1,5 +1,5 @@
 #include "RunResult.h"
-#include "ui_runresult.h"
+#include "ui_RunResult.h"
 #include "../Debug.h"
 RunResult::RunResult(QWidget *parent) :
     QWidget(parent),
