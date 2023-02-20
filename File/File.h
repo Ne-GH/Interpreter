@@ -4,21 +4,26 @@
 #include <string>
 #include <string_view>
 #include <filesystem>
-
+#include <QWidget>
+#include <QTextEdit>
 class File {
 	using Path = std::filesystem::path;
+
 	std::string _content;
 	Path _path;
-
+	QWidget* _window;
 public:
 	File() = default;
-	explicit File(Path path);
+    File(QWidget* window);
+
 	
+	void NewFile();
 	void Open();
-	void Save();
+	void Save(std::string_view uptada_text);
 	void Close();
 
 	std::string_view GetContent();
+
 	Path GetPath();
 	
 };

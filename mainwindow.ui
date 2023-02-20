@@ -51,6 +51,7 @@
     <addaction name="open_file"/>
     <addaction name="save_file"/>
     <addaction name="close_file"/>
+    <addaction name="create_file"/>
    </widget>
    <addaction name="file_menu"/>
    <addaction name="operator_menu"/>
@@ -78,6 +79,11 @@
   <action name="close_file">
    <property name="text">
     <string>关闭</string>
+   </property>
+  </action>
+  <action name="create_file">
+   <property name="text">
+    <string>创建</string>
    </property>
   </action>
  </widget>

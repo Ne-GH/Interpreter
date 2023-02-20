@@ -21,12 +21,12 @@ set(PROJECT_SOURCES
         mainwindow.h
         mainwindow.ui
 
-        File/File.h
-        File/File.cpp
+        ./File/File.h
+        ./File/File.cpp
 
-        RunResult/RunResult.h
-        RunResult/RunResult.cpp
-        RunResult/RunResult.ui
+        ./RunResult/RunResult.h
+        ./RunResult/RunResult.cpp
+        ./RunResult/RunResult.ui
 )
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")

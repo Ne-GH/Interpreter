@@ -20,7 +20,7 @@ private:
     Ui::MainWindow *ui;
 
     RunResult _run_window;
-    File _file;
+    File* _file;
     
     
 };
