@@ -1,4 +1,3 @@
-#include "../Debug.h"
 #include "File.h"
 #include <QFileDialog>
 #include <fstream>
