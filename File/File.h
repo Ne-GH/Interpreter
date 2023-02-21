@@ -24,7 +24,7 @@ public:
 	void Save(std::string_view uptada_text);
 	void Close();
 
-	std::string_view GetContent();
+	std::string& GetContent();
 
 	Path GetPath();
 	

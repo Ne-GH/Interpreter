@@ -6,7 +6,7 @@ auto File::GetPath() -> Path{
 	return _path;
 }
 
-std::string_view File::GetContent() {
+std::string& File::GetContent() {
 	return _content;
 }
 File::File(QWidget* window) :_window(window) {  }
