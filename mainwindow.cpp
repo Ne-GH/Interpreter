@@ -3,9 +3,10 @@
 
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
-    , ui(new Ui::MainWindow), _file(this)
+    , ui(new Ui::MainWindow), _file(this), _interpreter(_log)
 {
     ui->setupUi(this);
+
 
     setWindowTitle("解释器");
     setCentralWidget(ui->file_edit);
