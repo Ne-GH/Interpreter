@@ -32,5 +32,6 @@
 *.app
 
 .vs
+.idea
 out/
 CMakeLists.txt.user
