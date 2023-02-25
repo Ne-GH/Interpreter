@@ -58,10 +58,12 @@ void program() {
 
 
 int eval() {
-    int op = text[0];
+    int op ;
     // int *tmp;
     int i = 0;
     while(true) {
+        op = *pc;
+        pc ++;
         switch (op) {
             case IMM :
                 ax = *pc;
@@ -221,7 +223,6 @@ int eval() {
                 return -1;
         }
 
-        op = text[i++];
     }
     return 0;
 }
