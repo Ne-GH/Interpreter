@@ -6,7 +6,7 @@ int token;
 int line = 0;
 char* src, * old_src;
 int pool_size = 1024 * 256;
-Log *log = nullptr;
+Log *debug = nullptr;
 
 
 // 堆栈信息
@@ -79,6 +79,149 @@ void next() {
                     src ++;
                 }
                 break;
+			// 运算符
+            case '=':
+                if (*src == '=') {
+                    src++;
+                    token = Eq;
+                }
+                break;
+            case '+':
+                if (*src == '+') {
+                    src++;
+                    token = Inc;
+                }
+                else {
+                    token = Add;
+                }
+                break;
+            case '-':
+                if (*src == '-') {
+                    src++;
+                    token = Dec;
+                }
+                else {
+                    token = Sub;
+                }
+                break;
+            case '!':
+                if (*src == '=') {
+                    src++;
+                    token = Ne;
+                }
+                break;
+            case '<':
+                if (*src == '=') {
+                    src++;
+                    token = Le;
+                }
+                else if (*src == '<') {
+                    src++;
+                    token = Shl;
+                }
+                else {
+                    token = Lt;
+                }
+                break;
+            case '>':
+                if (*src == '=') {
+                    src++;
+                    token = Ge;
+                }
+                else if (*src == '>') {
+                    src++;
+                    token = Shr;
+                }
+                else {
+                    token = Gt;
+                }
+                break;
+            case '|':
+                if (*src == '|') {
+                    src++;
+                    token = Lor;
+                }
+                else {
+                    token = Or;
+                }
+                break;
+            case '&':
+                if (*src == '&') {
+                    src++;
+                    token = Lan;
+                }
+                else {
+                    token = And;
+                }
+                break;
+            case '^':
+                token = Xor;
+                break;
+            case '%':
+                token = Mod;
+                break;
+            case '*':
+                token = Mul;
+                break;
+            case '[':
+                token = Brak;
+                break;
+            case '?':
+                token = Cond;
+                break;
+            case '~':
+            case ';':
+            case '{':
+            case '}':
+            case '(':
+            case ')':
+            case ']':
+            case ',':
+            case ':':
+                return;
+                break;
+
+			// 字符串
+            case '\"':
+            case '\'':
+                last_pos = data;
+                while (*src != 0 && *src != token) {
+                    token_val = *src;
+                    src++;
+                    if (token_val == '\\') {
+                        token_val = *src;
+                        src++;
+                        if (token_val == 'n') {
+                            token_val = '\n';
+                        }
+                    }
+
+                    if (token == '\"') {
+                        *data = token_val;
+                        data++;
+                    }
+                }
+                src++;
+                if (token == '\"') {
+                    token_val = (int)last_pos;
+                }
+                else {
+                    token = Num;
+                }
+                return;
+                break;
+            case '/':
+                if (*src == '/') {
+                    while (*src != 0 && *src != '\n') {
+                        src++;
+                    }
+                }
+                else {
+                    token = Div;
+                    return;
+                }
+                break;
+
             default: {
                 // 如果是标识符
                 if (std::isalpha(token) || token == '_') {
@@ -121,13 +264,23 @@ void next() {
                             while (std::isalnum(token)
                                 || token >= 'a' && token <= 'f'
                                 || token >= 'A' && token <= 'F') {
-
+                                token_val = token_val * 16
+									+ std::stoi(std::string(1, token), nullptr, 16);
+                                src++;
+                                token = *src;
+                            }
+                        }
+                        else {
+                            while (*src >= '0' && *src <= '7') {
+                                token_val = token_val * 8 + *src - '0';
+                                src++;
                             }
                         }
 
                     }
-
-                }
+                    token = Num;
+                    return;
+                }   // 数字字面值常量
 
                 break;
             }   // default end
@@ -145,13 +298,14 @@ void program() {
     next();
     while (token > 0) {
         // qDebug() << token;
-        log->AddLog("token is: " + std::to_string(token));
+        debug->AddLog("token is: " + std::to_string(token));
         // printf("token is: %c\n", token);
         next();
     }
 }
 
 
+// 虚拟机
 int eval() {
     int op ;
     // int *tmp;
@@ -290,7 +444,7 @@ int eval() {
                 sp ++;
                 break;
             case EXIT:
-                log->AddLog("ret:" + std::to_string(*sp));
+                debug->AddLog("ret:" + std::to_string(*sp));
                 return *sp;
             case OPEN:
                 break;
@@ -313,7 +467,7 @@ int eval() {
                 ax = (intptr_t) memcpy((char*)sp[2],(char*)sp[1],*sp);
                 break;
             default:
-                log->AddErrorLog("未知的指令"+std::to_string(op));
+                debug->AddErrorLog("未知的指令"+std::to_string(op));
                 return -1;
         }
 
@@ -325,7 +479,7 @@ Interpreter::Interpreter(Log& log_tmp) : _log(log_tmp) {
 }
 
 void Interpreter::Run(std::string& file_content) {
-    log = &_log;
+    debug = &_log;
     // 从ui获取文件内容
     // src = &file_content[0];
 
@@ -334,7 +488,7 @@ void Interpreter::Run(std::string& file_content) {
     data = new char[pool_size]();
     if(text == nullptr || old_text == nullptr
         || stack == nullptr || data == nullptr) {
-        log->AddErrorLog("为虚拟机分配内存失败");
+        debug->AddErrorLog("为虚拟机分配内存失败");
         return;
     }
 
@@ -351,6 +505,7 @@ void Interpreter::Run(std::string& file_content) {
     text[i++] = PUSH;
     text[i++] = EXIT;
     pc = text;
+
 
 
 
