@@ -33,14 +33,109 @@ enum {
     OR  ,XOR ,AND ,EQ  ,NE  ,LT  ,GT  ,LE  ,GE  ,SHL ,SHR ,ADD ,SUB ,MUL ,DIV ,MOD ,
     // Fun,30-37
     OPEN ,READ ,CLOS ,PRTF ,MALC ,MSET ,MCMP ,EXIT
+};
+// 词法分析器
+enum {
+    Num = 128 ,Fun ,Sys ,Glo ,Loc ,Id ,
+    Char ,Else ,Enum ,If ,Int ,Return ,Sizeof ,While ,
+    Assign ,Cond ,Lor ,Lan ,Or ,Xor ,And ,Eq ,Ne ,Lt ,Gt ,Le ,Ge ,Shl ,Shr ,Add ,Sub ,Mul ,Div ,Mod ,Inc ,Dec ,Brak
+};
+
+// 标识符
+struct Identifier {
+    int token;
+    int hash;
+    char *name;
+    int _class;     // 数字、全局、局部
+    int type;       // int、char、...
+    int value;
+    // 局部变量和全局变量冲突时，以下三个变量用来保存全局变量的信息
+    int Bclass;
+    int Btype;
+    int Bvalue;
 
 };
 
+
+int token_val;
+int *current_id, *symbols;
+enum {
+    Token, Hash, Name, Type, Class, Value, BType, BClass, BValue, IdSize
+};
 void next() {
-//    token = *src++;
-    token = *text ++;
-    return;
-}
+
+    char *last_pos;
+    int hash;
+
+    while (token = *src) {
+        src ++;
+
+        switch (token) {
+            case '\n':
+                line ++;
+                break;
+            case '#':
+                while (*src != 0 && *src != '\n') {
+                    src ++;
+                }
+                break;
+            default: {
+                // 如果是标识符
+                if (std::isalpha(token) || token == '_') {
+                    // last_pos 是当前标识符的末尾字符的位置
+                    last_pos = src - 1;
+                    hash = token;
+                    // Hash
+                    while (std::isalpha(*src) || std::isalnum(*src) || *src == '_') {
+                        hash = hash*147 + *src;
+                        src ++;
+                    }
+                    current_id = symbols;
+                    // 线性遍历符号表
+                    while (current_id[Token]) {
+                        if (current_id[Hash] == hash && !memcmp((char *)current_id[Name],last_pos,src-last_pos)) {
+                            token = current_id[Token];
+                            return;
+                        }
+                        current_id = current_id + IdSize;
+                    }
+                    current_id[Name] = (intptr_t)last_pos;
+                    current_id[Hash] = hash;
+                    token = current_id[Token] = Id;
+
+                }   // if 标识符 end
+
+                // 数字字面量
+                else if (std::isalnum(token)) {
+                    token_val = token - '0';
+                    if(token_val > 0) {
+                        while (std::isalnum(*src)) {
+                            token_val = token_val*10 + *src - '0';
+                            src ++;
+                        }
+                    }
+                    else {
+                        if (*src == 'x' || *src == 'X') {
+                            src ++;
+                            token = *src;
+                            while (std::isalnum(token)
+                                || token >= 'a' && token <= 'f'
+                                || token >= 'A' && token <= 'F') {
+
+                            }
+                        }
+
+                    }
+
+                }
+
+                break;
+            }   // default end
+        }   // switch end
+
+    }   // while end
+
+}   // fun end
 
 void expression(int level) {
     // do nothing
@@ -197,7 +292,6 @@ int eval() {
             case EXIT:
                 log->AddLog("ret:" + std::to_string(*sp));
                 return *sp;
-                break;
             case OPEN:
                 break;
             case CLOS:
@@ -257,10 +351,6 @@ void Interpreter::Run(std::string& file_content) {
     text[i++] = PUSH;
     text[i++] = EXIT;
     pc = text;
-
-
-
-
 
 
 
