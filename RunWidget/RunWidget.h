@@ -3,6 +3,7 @@
 
 #include <QWidget>
 #include <QTextEdit>
+#include <string>
 namespace Ui {
     class RunWidget;
 }
@@ -11,22 +12,28 @@ namespace Ui {
 class RunResult : public QTextEdit {
     Q_OBJECT
 
-    // Do not handle other events
+    int _only_read_length = 0;
+
     void mousePressEvent(QMouseEvent *)       override { /* Ignore */ }
     void mouseDoubleClickEvent(QMouseEvent *) override { /* Ignore */ }
     void mouseMoveEvent(QMouseEvent *)        override { /* Ignore */ }
     void mouseReleaseEvent(QMouseEvent *)     override { /* Ignore */ }
     void keyPressEvent(QKeyEvent *)           override ;
 
-    int _only_read_length;
 
+    void SetCursorPos(int) ;
+    int GetCursorPos() const ;
 public:
     explicit RunResult(QWidget *parent = nullptr);
 
     ~RunResult() = default;
 
-    void SetCursorPos(int) ;
-    int GetCursorPos() const ;
+
+    std::string GetInput();
+    void Output(std::string);
+
+signals:
+    void Input();
 
 
 };

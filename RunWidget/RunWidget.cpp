@@ -5,14 +5,30 @@
 #include <QGridLayout>
 #include <QTextBlock>
 
+// 运行结果编辑界面
 RunResult::RunResult(QWidget *parent) :
         QTextEdit(parent) {
     setLineWrapMode(NoWrap);
 }
 
+void RunResult::Output(std::string out_message) {
+    moveCursor(QTextCursor::End);
+    insertPlainText(out_message.c_str());
+    auto cur_cursor = textCursor();
+    _only_read_length = cur_cursor.position() - cur_cursor.block().position();
+}
+std::string RunResult::GetInput() {
+    auto cur_cursor = textCursor();
+    auto cur_block = cur_cursor.block();
+    std::string input = cur_block.text().toStdString();
+    input.erase(0,_only_read_length);
+    insertPlainText("\n");
+    return input;
+}
 void RunResult::SetCursorPos(int pos) {
     auto cur_cursor = textCursor();
-    cur_cursor.setPosition(pos);
+    auto cur_block = cur_cursor.block();
+    cur_cursor.setPosition(pos + cur_block.position());
     setTextCursor(cur_cursor);
 }
 int RunResult::GetCursorPos() const {
@@ -34,6 +50,11 @@ void RunResult::keyPressEvent(QKeyEvent *event) {
         case Qt::Key_Home:
             SetCursorPos(_only_read_length);
             break;
+        case Qt::Key_Return:
+        case Qt::Key_Enter:
+            emit Input();
+            break;
+
         default:
             QTextEdit::keyPressEvent(event);
             break;
@@ -41,6 +62,9 @@ void RunResult::keyPressEvent(QKeyEvent *event) {
 }
 
 
+
+
+// 运行窗口
 RunWidget::RunWidget(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::RunWidget)
@@ -51,6 +75,13 @@ RunWidget::RunWidget(QWidget *parent) :
     layout->addWidget(_run_result);
     layout->setContentsMargins(0,0,0,0);
     setContentsMargins(0,0,0,0);
+
+
+    connect(_run_result,&RunResult::Input,[=]{
+        _run_result->Output(_run_result->GetInput() ) ;
+    });
+
+
 }
 
 RunWidget::~RunWidget()
