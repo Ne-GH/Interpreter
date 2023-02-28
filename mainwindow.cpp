@@ -4,6 +4,7 @@
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow), _file(this), _interpreter(_log)
+    , _run_widget(new RunWidget)
 {
     ui->setupUi(this);
 
@@ -31,7 +32,7 @@ MainWindow::MainWindow(QWidget* parent)
     
     });
     connect(ui->run_action, &QAction::triggered, [=] {
-        _run_window.Show();
+        _run_widget->show();
         _interpreter.Run(_file.GetContent());
     });
     connect(ui->log_action, &QAction::triggered, [=] {

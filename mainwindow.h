@@ -4,7 +4,7 @@
 
 #include "Logs/Log.h"
 #include "File/File.h"
-#include "RunResult/RunResult.h"
+#include "RunWidget/RunWidget.h"
 #include "Interpreter/Interpreter.h"
 
 QT_BEGIN_NAMESPACE
@@ -24,8 +24,9 @@ private:
 
     Log _log;
     File _file;
-    RunResult _run_window;
+    RunWidget *_run_widget;
     Interpreter _interpreter;
+
     
 };
 #endif // MAINWINDOW_H

@@ -203,7 +203,7 @@ void next() {
                 }
                 src++;
                 if (token == '\"') {
-                    token_val = (int)last_pos;
+                    token_val = (intptr_t)last_pos;
                 }
                 else {
                     token = Num;
