@@ -12,16 +12,21 @@ class RunResult : public QTextEdit {
     Q_OBJECT
 
     // Do not handle other events
-    void mousePressEvent(QMouseEvent *)       { /* Ignore */ }
-    void mouseDoubleClickEvent(QMouseEvent *) { /* Ignore */ }
-    void mouseMoveEvent(QMouseEvent *)        { /* Ignore */ }
-    void mouseReleaseEvent(QMouseEvent *)     { /* Ignore */ }
+    void mousePressEvent(QMouseEvent *)       override { /* Ignore */ }
+    void mouseDoubleClickEvent(QMouseEvent *) override { /* Ignore */ }
+    void mouseMoveEvent(QMouseEvent *)        override { /* Ignore */ }
+    void mouseReleaseEvent(QMouseEvent *)     override { /* Ignore */ }
+    void keyPressEvent(QKeyEvent *)           override ;
+
+    int _only_read_length;
+
 public:
     explicit RunResult(QWidget *parent = nullptr);
 
     ~RunResult() = default;
 
-    int GetLength() const ;
+    void SetCursorPos(int) ;
+    int GetCursorPos() const ;
 
 
 };
