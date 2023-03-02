@@ -1,10 +1,9 @@
 #include "mainwindow.h"
 #include "./ui_mainwindow.h"
-
+#include "Logs/Log.h"
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
-    , ui(new Ui::MainWindow), _file(this), _interpreter(_log)
-    , _run_widget(new RunWidget)
+    , ui(new Ui::MainWindow), _file(this), _run_widget(new RunWidget)
 {
     ui->setupUi(this);
 
@@ -36,7 +35,7 @@ MainWindow::MainWindow(QWidget* parent)
         _interpreter.Run(_file.GetContent());
     });
     connect(ui->log_action, &QAction::triggered, [=] {
-        _log.Show();
+        Log::GetInstance().Show();
     });
     
    
@@ -46,7 +45,7 @@ MainWindow::MainWindow(QWidget* parent)
     ui->save_file->setShortcut(QKeySequence("Ctrl+S"));
     ui->close_file->setShortcut(QKeySequence("Ctrl+W"));
 
-    _log.AddLog("绑定快捷键完成");
+    Log::GetInstance().AddLog("绑定快捷键完成");
 
 }
 

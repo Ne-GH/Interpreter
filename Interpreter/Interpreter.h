@@ -7,13 +7,12 @@
 
 class Interpreter {
 public:
-	Interpreter(Log & log);
+	Interpreter();
 	~Interpreter();
 	
 	void Run(std::string &file_content);
 
 private:
-	Log& _log;
 
 };
 

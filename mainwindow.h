@@ -22,7 +22,6 @@ public:
 private:
     Ui::MainWindow *ui;
 
-    Log _log;
     File _file;
     RunWidget *_run_widget;
     Interpreter _interpreter;

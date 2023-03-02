@@ -6,7 +6,6 @@ int token;
 int line = 0;
 char* src, * old_src;
 int pool_size = 1024 * 256;
-Log *debug = nullptr;
 
 
 // 堆栈信息
@@ -298,7 +297,8 @@ void program() {
     next();
     while (token > 0) {
         // qDebug() << token;
-        debug->AddLog("token is: " + std::to_string(token));
+
+        Log::GetInstance().AddLog("token is: " + std::to_string(token));
         // printf("token is: %c\n", token);
         next();
     }
@@ -444,7 +444,7 @@ int eval() {
                 sp ++;
                 break;
             case EXIT:
-                debug->AddLog("ret:" + std::to_string(*sp));
+                Log::GetInstance().AddLog("ret:" + std::to_string(*sp));
                 return *sp;
             case OPEN:
                 break;
@@ -467,19 +467,18 @@ int eval() {
                 ax = (intptr_t) memcpy((char*)sp[2],(char*)sp[1],*sp);
                 break;
             default:
-                debug->AddErrorLog("未知的指令"+std::to_string(op));
+                Log::GetInstance().AddErrorLog("未知的指令"+std::to_string(op));
                 return -1;
         }
 
     }
     return 0;
 }
-Interpreter::Interpreter(Log& log_tmp) : _log(log_tmp) {
+Interpreter::Interpreter() {
 
 }
 
 void Interpreter::Run(std::string& file_content) {
-    debug = &_log;
     // 从ui获取文件内容
     // src = &file_content[0];
 
@@ -488,7 +487,7 @@ void Interpreter::Run(std::string& file_content) {
     data = new char[pool_size]();
     if(text == nullptr || old_text == nullptr
         || stack == nullptr || data == nullptr) {
-        debug->AddErrorLog("为虚拟机分配内存失败");
+        Log::GetInstance().AddErrorLog("为虚拟机分配内存失败");
         return;
     }
 

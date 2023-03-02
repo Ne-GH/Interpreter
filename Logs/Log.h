@@ -3,6 +3,7 @@
 
 #include <QDialog>
 #include <string>
+#include <memory>
 
 
 namespace Ui {
@@ -14,10 +15,12 @@ enum class HighLightType{
 class Log : public QDialog {
     Q_OBJECT
 
+    explicit Log(QWidget *parent = nullptr);
+    Log(const Log&) = default;
+    Log& operator = (const Log&) = default;
 private slots:
     void resizeEvent(QResizeEvent *event);
 public:
-    explicit Log(QWidget *parent = nullptr);
     ~Log();
 
     void AddLog(std::string,std::string log_type = "");
@@ -27,6 +30,10 @@ public:
     void Hide();
     std::string GetLogString();
 
+    static Log &GetInstance() {
+        static std::unique_ptr<Log> instance(new Log) ;
+        return *instance;
+    }
 private:
     Ui::Log *ui;
     std::string logs;
