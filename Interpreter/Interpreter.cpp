@@ -61,6 +61,12 @@ int *current_id, *symbols;
 enum {
     Token, Hash, Name, Type, Class, Value, BType, BClass, BValue, IdSize
 };
+
+enum {
+    CHAR, INT, PTR
+};
+int *idmain;    // main 函数
+
 void next() {
 
     char *last_pos;
@@ -478,6 +484,36 @@ Interpreter::Interpreter() {
     text = old_text = (int *)new char[pool_size]();
     stack = (intptr_t *)new char[pool_size]();
     data = new char[pool_size]();
+
+    if(text == nullptr || old_text == nullptr
+       || stack == nullptr || data == nullptr) {
+        LOG.AddWringLog("为虚拟机分配内存失败");
+        return;
+    }
+
+    bp = sp = (int *)((intptr_t)stack + pool_size);
+    ax = 0;
+
+    src = "char else enum if int return sizeof while "
+          "open read close printf malloc memset memcmp exit void main";
+    int i = Char;
+    while (i <= While) {
+        next();
+        current_id[Token] = i++;
+    }
+
+    i = OPEN;
+    while (i <= EXIT) {
+        next();
+        current_id[Class] = Sys;
+        current_id[Type] = INT;
+        current_id[Value] = i ++;
+    }
+    next();
+    current_id[Token] = Char;
+    next();
+    idmain = current_id;
+
 }
 
 void Interpreter::Run(std::string& file_content) {
@@ -485,14 +521,7 @@ void Interpreter::Run(std::string& file_content) {
     // src = &file_content[0];
 
 
-    if(text == nullptr || old_text == nullptr
-        || stack == nullptr || data == nullptr) {
-        LOG.AddWringLog("为虚拟机分配内存失败");
-        return;
-    }
 
-    bp = sp = (int *)((intptr_t)stack + pool_size);
-    ax = 0;
 
     int i = 0;
     text[i++] = IMM;
