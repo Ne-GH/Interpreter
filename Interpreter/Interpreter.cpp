@@ -475,16 +475,16 @@ int eval() {
     return 0;
 }
 Interpreter::Interpreter() {
-
+    text = old_text = (int *)new char[pool_size]();
+    stack = (intptr_t *)new char[pool_size]();
+    data = new char[pool_size]();
 }
 
 void Interpreter::Run(std::string& file_content) {
     // 从ui获取文件内容
     // src = &file_content[0];
 
-    text = old_text = (int *)new char[pool_size]();
-    stack = (intptr_t *)new char[pool_size]();
-    data = new char[pool_size]();
+
     if(text == nullptr || old_text == nullptr
         || stack == nullptr || data == nullptr) {
         LOG.AddWringLog("为虚拟机分配内存失败");
@@ -512,4 +512,11 @@ void Interpreter::Run(std::string& file_content) {
     eval();
 }
 
-Interpreter::~Interpreter() {  }
+Interpreter::~Interpreter() {
+    delete text;
+    delete stack;
+    delete data;
+    text = nullptr;
+    stack = nullptr;
+    data = nullptr;
+}
