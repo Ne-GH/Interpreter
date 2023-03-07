@@ -9,6 +9,9 @@ MainWindow::MainWindow(QWidget* parent)
 
 
     setWindowTitle("解释器");
+
+    setWindowIcon(QIcon(":/Resource/main.ico"));
+
     setCentralWidget(ui->file_edit);
 
     connect(ui->create_file, &QAction::triggered, [=] {

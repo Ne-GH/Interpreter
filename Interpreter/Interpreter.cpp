@@ -57,7 +57,7 @@ struct Identifier {
 
 
 int token_val;
-int *current_id, *symbols;
+intptr_t *current_id, *symbols;
 enum {
     Token, Hash, Name, Type, Class, Value, BType, BClass, BValue, IdSize
 };
@@ -65,7 +65,7 @@ enum {
 enum {
     CHAR, INT, PTR
 };
-int *idmain;    // main 函数
+intptr_t *idmain;    // main 函数
 
 void next() {
 
@@ -484,9 +484,11 @@ Interpreter::Interpreter() {
     text = old_text = (int *)new char[pool_size]();
     stack = (intptr_t *)new char[pool_size]();
     data = new char[pool_size]();
+    symbols = (intptr_t *)new char[pool_size]();
 
     if(text == nullptr || old_text == nullptr
-       || stack == nullptr || data == nullptr) {
+       || stack == nullptr || data == nullptr
+       || symbols == nullptr ) {
         LOG.AddWringLog("为虚拟机分配内存失败");
         return;
     }

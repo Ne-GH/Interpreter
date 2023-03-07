@@ -19,6 +19,8 @@ set(PROJECT_SOURCES
         mainwindow.h
         mainwindow.ui
 
+        Resource.qrc
+
         ./File/File.h
         ./File/File.cpp
 
@@ -33,6 +35,7 @@ set(PROJECT_SOURCES
         ./RunWidget/RunWidget.h
         ./RunWidget/RunWidget.cpp
         ./RunWidget/RunWidget.ui
+
 
         )
 
