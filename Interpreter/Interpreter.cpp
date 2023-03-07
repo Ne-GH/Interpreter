@@ -67,6 +67,38 @@ enum {
 };
 intptr_t *idmain;    // main 函数
 
+// 递归下降
+/*******************************************************************************
+    消除左递归后的文法为
+    <expr> ::= <term> <expr_tail>
+    <expr_tail> ::= + <term> <expr_tail>
+              | - <term> <expr_tail>
+              | <empty>
+
+    <term> ::= <factor> <term_tail>
+    <term_tail> ::= * <factor> <term_tail>
+                  | / <factor> <term_tail>
+                  | <empty>
+
+    <factor> ::= ( <expr> )
+               | Num
+*******************************************************************************/
+int factor();
+
+int term_tail();
+
+int term();
+
+int expr_tail();
+
+int expr();
+
+
+
+
+
+
+
 void next() {
 
     char *last_pos;
