@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="/">
-        <file>Resource/main.ico</file>
+        <file>Resource/terminal.png</file>
+        <file>Resource/interpreter.png</file>
     </qresource>
 </RCC>

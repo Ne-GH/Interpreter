@@ -1,6 +1,6 @@
 #include "RunWidget.h"
 #include "ui_RunWidget.h"
-
+#include <QIcon>
 #include <QKeyEvent>
 #include <QGridLayout>
 #include <QTextBlock>
@@ -9,6 +9,7 @@
 RunResult::RunResult(QWidget *parent) :
         QTextEdit(parent) {
     setLineWrapMode(NoWrap);
+
 }
 
 void RunResult::Output(std::string out_message) {
@@ -76,6 +77,7 @@ RunWidget::RunWidget(QWidget *parent) :
     layout->setContentsMargins(0,0,0,0);
     setContentsMargins(0,0,0,0);
 
+    setWindowIcon(QIcon(":/Resource/terminal.png"));
 
     connect(_run_result,&RunResult::Input,[=]{
         _run_result->Output(_run_result->GetInput() ) ;

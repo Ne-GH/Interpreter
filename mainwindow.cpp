@@ -9,8 +9,7 @@ MainWindow::MainWindow(QWidget* parent)
 
 
     setWindowTitle("解释器");
-
-    setWindowIcon(QIcon(":/Resource/main.ico"));
+    setWindowIcon(QIcon(":/Resource/interpreter.png"));
 
     setCentralWidget(ui->file_edit);
 
