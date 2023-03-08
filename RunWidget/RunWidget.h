@@ -42,6 +42,8 @@ class RunWidget : public QWidget {
     Q_OBJECT
 
 public:
+    static RunWidget& GetInstance();
+    RunResult &GetRunResult();
     ~RunWidget();
 
 private:
@@ -51,10 +53,8 @@ private:
 
     Ui::RunWidget *ui;
     RunResult *_run_result;
-    RunResult &GetRunResult();
 
-    static RunWidget& GetInstance();
-    static std::unique_ptr<RunWidget> _instance;
 };
 
+#define RUNRESULT RunWidget::GetInstance().GetRunResult()
 #endif // RUNWIDGET_H

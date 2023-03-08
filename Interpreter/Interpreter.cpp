@@ -1,6 +1,5 @@
 #include "./Interpreter.h"
-
-
+#include "../RunWidget/RunWidget.h"
 
 int token;
 int line = 0;
@@ -334,10 +333,7 @@ void expression(int level) {
 void program() {
     next();
     while (token > 0) {
-        // qDebug() << token;
-
         LOG.AddLog("token is: " + std::to_string(token));
-        // printf("token is: %c\n", token);
         next();
     }
 }
@@ -482,7 +478,7 @@ int eval() {
                 sp ++;
                 break;
             case EXIT:
-                LOG.AddLog("ret:" + std::to_string(*sp));
+                RUNRESULT.Output("返回结果为:" + std::to_string(*sp));
                 return *sp;
             case OPEN:
                 break;

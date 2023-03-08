@@ -96,6 +96,7 @@ RunResult &RunWidget::GetRunResult() {
 
 
 RunWidget &RunWidget::GetInstance() {
+    static std::unique_ptr<RunWidget> _instance;
     if (_instance == nullptr) {
         _instance.reset(new RunWidget());
     }

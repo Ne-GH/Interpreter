@@ -23,7 +23,6 @@ private:
     Ui::MainWindow *ui;
 
     File _file;
-    RunWidget *_run_widget;
     Interpreter _interpreter;
 
     
