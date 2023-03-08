@@ -86,7 +86,18 @@ RunWidget::RunWidget(QWidget *parent) :
 
 }
 
-RunWidget::~RunWidget()
-{
+RunWidget::~RunWidget() {
     delete ui;
+}
+
+RunResult &RunWidget::GetRunResult() {
+    return *_run_result;
+}
+
+
+RunWidget &RunWidget::GetInstance() {
+    if (_instance == nullptr) {
+        _instance.reset(new RunWidget());
+    }
+    return  *_instance;
 }

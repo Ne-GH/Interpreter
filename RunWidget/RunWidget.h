@@ -38,17 +38,23 @@ signals:
 
 };
 
-class RunWidget : public QWidget
-{
+class RunWidget : public QWidget {
     Q_OBJECT
 
 public:
-    explicit RunWidget(QWidget *parent = nullptr);
     ~RunWidget();
 
 private:
+    explicit RunWidget(QWidget *parent = nullptr);
+    RunWidget(const RunWidget&);
+    RunWidget& operator = (const RunWidget&);
+
     Ui::RunWidget *ui;
     RunResult *_run_result;
+    RunResult &GetRunResult();
+
+    static RunWidget& GetInstance();
+    static std::unique_ptr<RunWidget> _instance;
 };
 
 #endif // RUNWIDGET_H
