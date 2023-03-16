@@ -8,13 +8,13 @@ int pool_size = 1024 * 256;
 
 
 // 堆栈信息
-int *text,*old_text;
+intptr_t *text,*old_text;
 intptr_t *stack;
 char *data;
 
 
 // 寄存器信息
-int *pc,*bp,*sp,cycle;
+intptr_t *pc,*bp,*sp,cycle;
 intptr_t ax;
 
 // 指令集
@@ -65,32 +65,6 @@ enum {
     CHAR, INT, PTR
 };
 intptr_t *idmain;    // main 函数
-
-// 递归下降
-/*******************************************************************************
-    消除左递归后的文法为
-    <expr> ::= <term> <expr_tail>
-    <expr_tail> ::= + <term> <expr_tail>
-              | - <term> <expr_tail>
-              | <empty>
-
-    <term> ::= <factor> <term_tail>
-    <term_tail> ::= * <factor> <term_tail>
-                  | / <factor> <term_tail>
-                  | <empty>
-
-    <factor> ::= ( <expr> )
-               | Num
-*******************************************************************************/
-int factor();
-
-int term_tail();
-
-int term();
-
-int expr_tail();
-
-int expr();
 
 
 
@@ -326,17 +300,7 @@ void next() {
 
 }   // fun end
 
-void expression(int level) {
-    // do nothing
-}
 
-void program() {
-    next();
-    while (token > 0) {
-        LOG.AddLog("token is: " + std::to_string(token));
-        next();
-    }
-}
 
 
 // 虚拟机
@@ -371,19 +335,19 @@ int eval() {
                 *sp = ax;
                 break;
             case JMP:
-                pc = (int *)*pc;
+                pc = (intptr_t *)*pc;
                 break;
             case JZ:
                 if (ax != 0) {
                     pc = pc + 1;
                 }
                 else {
-                    pc = (int *)*pc;
+                    pc = (intptr_t *)*pc;
                 }
                 break;
             case JNZ:
                 if(ax != 0) {
-                    pc = (int *)*pc;
+                    pc = (intptr_t *)*pc;
                 }
                 else {
                     pc = pc + 1;
@@ -392,7 +356,7 @@ int eval() {
 
             case CALL:
                 *--sp = (intptr_t)(pc + 1);
-                pc = (int *)*pc;
+                pc = (intptr_t *)*pc;
                 break;
             case ENT:
                 *--sp = (intptr_t)bp;
@@ -406,8 +370,8 @@ int eval() {
                 break;
             case LEV:
                 sp = bp;
-                bp = (int *)*sp ++;
-                pc = (int *)*sp ++;
+                bp = (intptr_t *)*sp ++;
+                pc = (intptr_t *)*sp ++;
                 break;
             case LEA:
                 ax = (intptr_t)(bp + *pc);
@@ -487,7 +451,7 @@ int eval() {
             case READ:
                 break;
             case PRTF:{
-                int *tmp = sp + pc[1];
+                intptr_t *tmp = sp + pc[1];
                 ax = printf((char*)tmp[-1],tmp[-2],tmp[-3],tmp[-4],tmp[-5],tmp[-6]);
                 break;
             }
@@ -508,8 +472,397 @@ int eval() {
     }
     return 0;
 }
+
+// 递归下降
+/*******************************************************************************
+    消除左递归后的文法为
+    <expr> ::= <term> <expr_tail>
+    <expr_tail> ::= + <term> <expr_tail>
+              | - <term> <expr_tail>
+              | <empty>
+
+    <term> ::= <factor> <term_tail>
+    <term_tail> ::= * <factor> <term_tail>
+                  | / <factor> <term_tail>
+                  | <empty>
+
+    <factor> ::= ( <expr> )
+               | Num
+*******************************************************************************/
+void match(int tk) {
+    if (token != tk) {
+        LOG.AddErrorLog("期望的token为:" + std::to_string(tk)
+                        + "实际的token为:" + std::to_string(token));
+        exit(-1);
+    }
+    next();
+}
+int expr();
+
+int factor() {
+    int value = 0;
+    if (token == '(') {
+        match('(');
+        value = expr();
+        match(')');
+    }
+    else {
+        value = token_val;
+        match(Num);
+    }
+    return value;
+}
+
+
+int term_tail(int lvalue) {
+    if (token == '*') {
+        match('*');
+        int value = lvalue * factor();
+        return term_tail(value);
+    }
+    else if (token == '/') {
+        match('/');
+        int value = lvalue / factor();
+        return term_tail(value);
+    }
+    else {
+        return lvalue;
+    }
+}
+
+int term() {
+    int lvalue = factor();
+    return term_tail(lvalue);
+}
+
+int expr_tail(int lvalue) {
+    if (token == '+') {
+        match ('+');
+        int value = lvalue + term();
+        return expr_tail(value);
+    }
+    else if (token == '-') {
+        match('-');
+        int value = lvalue - term();
+        return expr_tail(value);
+    }
+    else {
+        return lvalue;
+    }
+}
+
+int expr() {
+    int lvalue = term();
+    return expr_tail(lvalue);
+}
+
+void expression(int level) {
+    // do nothing
+}
+void statement() {
+    intptr_t *a,*b;
+    if (token == If) {
+        match(If);
+        match('(');
+        expression(Assign);
+        match(')');
+
+        text ++;
+        *text = JZ;
+        b = ++ text;
+        statement();
+        if (token == Else) {
+            match(Else);
+            *b = (intptr_t)(text + 3);
+            text ++;
+            *text = JMP;
+            statement();
+        }
+        *b = (intptr_t)(text + 1);
+    }
+    else if (token == While) {
+        match(While);
+        a = text + 1;
+        match('(');
+        expression(Assign);
+        match(')');
+        text ++;
+        *text = JZ;
+        b = ++text;
+        statement();
+        *++text = JMP;
+        *++text = (intptr_t)a;
+        *b = (intptr_t)(text + 1);
+    }
+    else if (token == Return) {
+        match(Return);
+
+        if (token != ';') {
+            expression(Assign);
+        }
+        match(';');
+        *++text = LEV;
+    }
+
+    else if (token == '{'){
+        match('{');
+        while (token != '}') {
+            statement();
+        }
+        match('}');
+    }
+    else if (token == ';') {
+        match(';');
+    }
+    else {
+        expression(Assign);
+        match(';');
+    }
+
+}
+int index_of_bp;
+int basetype;
+int expr_type;
+void function_parameter() {
+    int type;
+    int params = 0;
+
+    while (token != ')') {
+        type = INT;
+
+        if (token == Int) {
+            match(Int);
+        }
+        else if (token == Char) {
+            type = CHAR;
+            match(Char);
+        }
+
+        while (token == Mul) {
+            match(Mul);
+            type = type + PTR;
+        }
+
+        if (token != Id) {
+            LOG.AddErrorLog(std::to_string(line) +
+                "bad parameter declaration");
+            exit(-1);
+        }
+        if (current_id[Class] == Loc) {
+            LOG.AddErrorLog(std::to_string(line) +
+                "duplicate parameter declaration");
+            exit(-1);
+        }
+        match(Id);
+
+        current_id[BClass] = current_id[Class];
+        current_id[Class] = Loc;
+
+        current_id[BType] = current_id[Type];
+        current_id[Type] = type;
+
+        current_id[BValue] = current_id[Value];
+        current_id[Value] = params;
+
+        if (token == ',') {
+            match(',');
+        }
+    }
+    index_of_bp = params + 1;
+}
+void function_body() {
+    int pos_local; // position of local variables on the stack.
+    int type;
+    pos_local = index_of_bp;
+
+    // ①
+    while (token == Int || token == Char) {
+        // local variable declaration, just like global ones.
+        basetype = (token == Int) ? INT : CHAR;
+        match(token);
+
+        while (token != ';') {
+            type = basetype;
+            while (token == Mul) {
+                match(Mul);
+                type = type + PTR;
+            }
+
+            if (token != Id) {
+                // invalid declaration
+                printf("%d: bad local declaration\n", line);
+                exit(-1);
+            }
+            if (current_id[Class] == Loc) {
+                // identifier exists
+                printf("%d: duplicate local declaration\n", line);
+                exit(-1);
+            }
+            match(Id);
+
+            // store the local variable
+            current_id[BClass] = current_id[Class]; current_id[Class]  = Loc;
+            current_id[BType]  = current_id[Type];  current_id[Type]   = type;
+            current_id[BValue] = current_id[Value]; current_id[Value]  = ++pos_local;   // index of current parameter
+
+            if (token == ',') {
+                match(',');
+            }
+        }
+        match(';');
+    }
+
+    // ②
+    // save the stack size for local variables
+    *++text = ENT;
+    *++text = pos_local - index_of_bp;
+
+    // statements
+    while (token != '}') {
+        statement();
+    }
+
+    // emit code for leaving the sub function
+    *++text = LEV;
+}
+void function_declaration(){
+
+}
+
+void enum_declaration() {
+    int i = 0;
+    while (token != '}') {
+        if (token != Id) {
+            LOG.AddErrorLog(std::to_string(line) + ": bad enum identifier " + std::to_string(token));
+            exit(-1);
+        }
+        next();
+        if (token == Assign) {
+            next();
+            if (token != Num) {
+                LOG.AddErrorLog(std::to_string(line) + ": bad enum initializer" );
+                exit(-1);
+            }
+            i = token_val;
+            next();
+        }
+        current_id[Class] = Num;
+        current_id[Type] = INT;
+        current_id[Value] = i ++;
+
+        if (token == ',') {
+            next();
+        }
+
+    }
+
+}
+void global_declaration() {
+    int type;
+    int i;
+    basetype = INT;
+
+    switch(token) {
+        // enum [id] { a = 10, b = 20, ... }
+        case Enum:
+            match(Enum);
+
+            if (token != '{') {
+                match(Id);
+            }
+            if (token == '{') {
+                match('{');
+                enum_declaration();
+                match('}');
+            }
+            match(';');
+            return;
+            break;
+        case Int:
+            match(Int);
+            break;
+        case Char:
+            match(Char);
+            basetype = CHAR;
+            break;
+    }
+    while (token != ';' && token != '}') {
+        type = basetype;
+        // 解析类似于int *********的类型
+        while (token == Mul) {
+            match(Mul);
+            type = type + PTR;
+        }
+
+        if (token != Id) {
+            LOG.AddErrorLog(std::to_string(line) + ": bad global declaration");
+            exit(-1);
+        }
+        if (current_id[Class]) {
+            LOG.AddErrorLog(std::to_string(line) + ": duplicate global declaration");
+            exit(-1);
+        }
+        match(Id);
+        current_id[Type] = type;
+
+        if (token == '(') {
+            current_id[Class] = Fun;
+            current_id[Value] = (intptr_t)(text + 1);
+            function_declaration();
+        }
+        else {
+            current_id[Class] = Glo;
+            current_id[Value] = (intptr_t)data;
+            data = data + sizeof(int);
+        }
+        if (token == ',') {
+            match(',');
+        }
+    }
+    next();
+}
+
+void program() {
+    next();
+    while (token > 0) {
+        LOG.AddLog("token is: " + std::to_string(token));
+        global_declaration();
+    }
+}
+
+void Interpreter::Run(std::string& file_content) {
+    // 从ui获取文件内容
+    // src = &file_content[0];
+
+//    int linecap = 0,linelen = 0;
+//    while((linelen = getline(&line,&linecap,stdin)) > 0) {
+//        src = line;
+//        next();
+//        printf("%d\n",expr());
+//    }
+//    return;
+
+
+
+    int i = 0;
+    text[i++] = IMM;
+    text[i++] = 10;
+    text[i++] = PUSH;
+    text[i++] = IMM;
+    text[i++] = 20;
+    text[i++] = ADD;
+    text[i++] = PUSH;
+    text[i++] = EXIT;
+    pc = text;
+
+
+
+
+    // program();
+    eval();
+}
 Interpreter::Interpreter() {
-    text = old_text = (int *)new char[pool_size]();
+    text = old_text = (intptr_t *)new char[pool_size]();
     stack = (intptr_t *)new char[pool_size]();
     data = new char[pool_size]();
     symbols = (intptr_t *)new char[pool_size]();
@@ -521,7 +874,7 @@ Interpreter::Interpreter() {
         return;
     }
 
-    bp = sp = (int *)((intptr_t)stack + pool_size);
+    bp = sp = (intptr_t *)((intptr_t)stack + pool_size);
     ax = 0;
 
     src = "char else enum if int return sizeof while "
@@ -545,32 +898,6 @@ Interpreter::Interpreter() {
     idmain = current_id;
 
 }
-
-void Interpreter::Run(std::string& file_content) {
-    // 从ui获取文件内容
-    // src = &file_content[0];
-
-
-
-
-    int i = 0;
-    text[i++] = IMM;
-    text[i++] = 10;
-    text[i++] = PUSH;
-    text[i++] = IMM;
-    text[i++] = 20;
-    text[i++] = ADD;
-    text[i++] = PUSH;
-    text[i++] = EXIT;
-    pc = text;
-
-
-
-
-    // program();
-    eval();
-}
-
 Interpreter::~Interpreter() {
     delete text;
     delete stack;
