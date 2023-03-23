@@ -556,9 +556,29 @@ int expr() {
     return expr_tail(lvalue);
 }
 
+
+// 语句
+int index_of_bp;
+int basetype;
+int expr_type;
+// 表达式
 void expression(int level) {
-    // do nothing
+
+    if (token == 0) {
+        LOG.AddErrorLog(std::to_string(line) +
+                        "unexpected token EOF of expression");
+    }
+
+    if(token == Num) {
+        match(Num);
+        *++text = IMM;
+        *++text = token_val;
+        expr_type = INT;
+    }
+
+
 }
+
 void statement() {
     intptr_t *a,*b;
     if (token == If) {
@@ -620,9 +640,6 @@ void statement() {
     }
 
 }
-int index_of_bp;
-int basetype;
-int expr_type;
 void function_parameter() {
     int type;
     int params = 0;
@@ -726,7 +743,27 @@ void function_body() {
     *++text = LEV;
 }
 void function_declaration(){
+    // type func_name (...) {...}
+    //               | this part
 
+    match('(');
+    function_parameter();
+    match(')');
+    match('{');
+    function_body();
+    //match('}');                 //  ①
+
+    // ②
+    // unwind local variable declarations for all local variables.
+    current_id = symbols;
+    while (current_id[Token]) {
+        if (current_id[Class] == Loc) {
+            current_id[Class] = current_id[BClass];
+            current_id[Type]  = current_id[BType];
+            current_id[Value] = current_id[BValue];
+        }
+        current_id = current_id + IdSize;
+    }
 }
 
 void enum_declaration() {
@@ -892,6 +929,7 @@ Interpreter::Interpreter() {
         current_id[Type] = INT;
         current_id[Value] = i ++;
     }
+
     next();
     current_id[Token] = Char;
     next();
