@@ -34,13 +34,15 @@ MainWindow::MainWindow(QWidget* parent)
     });
     connect(ui->run_action, &QAction::triggered, [=] {
         RunWidget::GetInstance().show();
-        _interpreter.Run(_file.GetContent());
+        RunWidget::GetInstance().Clear();
+        _interpreter->Run(_file.GetContent());
     });
     connect(ui->log_action, &QAction::triggered, [=] {
         LOG.Show();
     });
     
-   
+
+    _interpreter = std::make_shared<Interpreter>();
     
     ui->create_file->setShortcut(QKeySequence("Ctrl+N"));
     ui->open_file->setShortcut(QKeySequence("Ctrl+O"));
@@ -53,6 +55,7 @@ MainWindow::MainWindow(QWidget* parent)
 
 MainWindow::~MainWindow()
 {
+
     delete ui;
 }
 

@@ -23,7 +23,7 @@ private:
     Ui::MainWindow *ui;
 
     File _file;
-    Interpreter _interpreter;
+    std::shared_ptr<Interpreter> _interpreter;
 
     
 };

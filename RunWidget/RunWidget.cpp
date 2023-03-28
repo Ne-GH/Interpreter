@@ -62,6 +62,9 @@ void RunResult::keyPressEvent(QKeyEvent *event) {
     }
 }
 
+void RunWidget::Clear() {
+    GetRunResult().clear();
+}
 
 
 

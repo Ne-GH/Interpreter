@@ -45,6 +45,7 @@ public:
     static RunWidget& GetInstance();
     RunResult &GetRunResult();
     ~RunWidget();
+    void Clear();
 
 private:
     explicit RunWidget(QWidget *parent = nullptr);
@@ -55,6 +56,7 @@ private:
     RunResult *_run_result;
 
 };
+
 
 #define RUNRESULT RunWidget::GetInstance().GetRunResult()
 #endif // RUNWIDGET_H
