@@ -30,7 +30,8 @@ static string GetData(){
 //    ss << std::put_time(std::localtime(&time),"%Y/%m/%d %X");
 //    string ret = ss.str();
 //    return ret;
-    return std::format("{:%T}",std::chrono::current_zone()->to_local(std::chrono::system_clock::now())).substr(0,8);
+    using namespace::std::chrono;
+    return std::format("{:%T}",current_zone()->to_local(system_clock::now())).substr(0,8);
 }
 
 void Log::AddLog(string message,string log_type) {
