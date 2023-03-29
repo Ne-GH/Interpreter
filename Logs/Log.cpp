@@ -1,12 +1,13 @@
 #include "Log.h"
 #include "ui_Log.h"
 
+#include <format>
+#include <iostream>
 #include <sstream>
 #include <iomanip>
 #include <chrono>
 
-using std::string;
-
+using std::string,std::format;
 
 Log::Log(QWidget *parent) :
     QDialog(parent),
@@ -23,12 +24,13 @@ Log::~Log() {
 
 
 static string GetData(){
-    auto now = std::chrono::system_clock::now();
-    auto time = std::chrono::system_clock::to_time_t(now);
-    std::stringstream ss;
-    ss << std::put_time(std::localtime(&time),"%Y/%m/%d %X");
-    string ret = ss.str();
-    return ret;
+//    auto now = std::chrono::system_clock::now();
+//    auto time = std::chrono::system_clock::to_time_t(now);
+//    std::stringstream ss;
+//    ss << std::put_time(std::localtime(&time),"%Y/%m/%d %X");
+//    string ret = ss.str();
+//    return ret;
+    return std::format("{:%T}",std::chrono::current_zone()->to_local(std::chrono::system_clock::now())).substr(0,8);
 }
 
 void Log::AddLog(string message,string log_type) {
