@@ -5,7 +5,7 @@
 #include <string.h>
 #include <string>
 using std::string;
-#define int long long // to work with 64bit address
+//#define int long long // to work with 64bit address
 
 
 int token; // current token
@@ -33,18 +33,18 @@ enum { CHAR, INT, PTR };
 // type of declaration.
 enum {Global, Local};
 
-int *text, // text segment
+intptr_t *text, // text segment
 *stack;// stack
-int * old_text; // for dump text segment
+intptr_t * old_text; // for dump text segment
 char *data; // data segment
-int *idmain;
+intptr_t *idmain;
 
 char *src, *old_src;  // pointer to source code string;
 
 int pool_size; // default size of text/data/stack
-int *pc, *bp, *sp, ax, cycle; // virtual machine registers
+intptr_t *pc, *bp, *sp, ax, cycle; // virtual machine registers
 
-int *current_id, // current parsed ID
+intptr_t *current_id, // current parsed ID
 *symbols,    // symbol table
 line,        // line number of source code
 token_val;   // value of current token (mainly for number)
@@ -61,11 +61,11 @@ int expr_type;   // the type of an expression
 // 4: old bp pointer  <- index_of_bp
 // 5: local var 1
 // 6: local var 2
-int index_of_bp; // index of bp pointer on stack
+intptr_t index_of_bp; // index of bp pointer on stack
 
 void next() {
     char *last_pos;
-    int hash;
+    intptr_t hash;
 
     while (token = *src) {
         ++src;
@@ -103,7 +103,7 @@ void next() {
 
 
             // store new ID
-            current_id[Name] = (int)last_pos;
+            current_id[Name] = (intptr_t)last_pos;
             current_id[Hash] = hash;
             token = current_id[Token] = Id;
             return;
@@ -170,7 +170,7 @@ void next() {
             src++;
             // if it is a single character, return Num token
             if (token == '"') {
-                token_val = (int)last_pos;
+                token_val = (intptr_t)last_pos;
             } else {
                 token = Num;
             }
@@ -288,7 +288,7 @@ void next() {
     }
 }
 
-void match(int tk) {
+void match(intptr_t tk) {
     if (token == tk) {
         next();
     } else {
@@ -300,7 +300,7 @@ void match(int tk) {
 }
 
 
-void expression(int level) {
+void expression(intptr_t level) {
     // expressions have various format.
     // but majorly can be divided into two parts: unit and operator
     // for example `(char) *a[10] = (int *) func(b > 0 ? 10 : 20);
@@ -315,9 +315,9 @@ void expression(int level) {
     // 2. expr ::= unit_unary (bin_op unit_unary ...)
 
     // unit_unary()
-    int *id;
-    int tmp;
-    int *addr;
+    intptr_t *id;
+    intptr_t tmp;
+    intptr_t *addr;
     {
         if (!token) {
             LOG.AddErrorLog(std::to_string(line)
@@ -348,7 +348,7 @@ void expression(int level) {
 
             // append the end of string character '\0', all the data are default
             // to 0, so just move data one position forward.
-            data = (char *)(((int)data + sizeof(int)) & (-sizeof(int)));
+            data = (char *)(((intptr_t)data + sizeof(intptr_t)) & (-sizeof(intptr_t)));
             expr_type = PTR;
         }
         else if (token == Sizeof) {
@@ -375,7 +375,7 @@ void expression(int level) {
 
             // emit code
             *++text = IMM;
-            *++text = (expr_type == CHAR) ? sizeof(char) : sizeof(int);
+            *++text = (expr_type == CHAR) ? sizeof(char) : sizeof(intptr_t);
 
             expr_type = INT;
         }
@@ -578,7 +578,7 @@ void expression(int level) {
             }
             *++text = PUSH;
             *++text = IMM;
-            *++text = (expr_type > PTR) ? sizeof(int) : sizeof(char);
+            *++text = (expr_type > PTR) ? sizeof(intptr_t) : sizeof(char);
             *++text = (tmp == Inc) ? ADD : SUB;
             *++text = (expr_type == CHAR) ? SC : SI;
         }
@@ -622,11 +622,11 @@ void expression(int level) {
                             + "%d: missing colon in conditional");
                     exit(-1);
                 }
-                *addr = (int)(text + 3);
+                *addr = (intptr_t)(text + 3);
                 *++text = JMP;
                 addr = ++text;
                 expression(Cond);
-                *addr = (int)(text + 1);
+                *addr = (intptr_t)(text + 1);
             }
             else if (token == Lor) {
                 // logic or
@@ -634,7 +634,7 @@ void expression(int level) {
                 *++text = JNZ;
                 addr = ++text;
                 expression(Lan);
-                *addr = (int)(text + 1);
+                *addr = (intptr_t)(text + 1);
                 expr_type = INT;
             }
             else if (token == Lan) {
@@ -643,7 +643,7 @@ void expression(int level) {
                 *++text = JZ;
                 addr = ++text;
                 expression(Or);
-                *addr = (int)(text + 1);
+                *addr = (intptr_t)(text + 1);
                 expr_type = INT;
             }
             else if (token == Or) {
@@ -745,7 +745,7 @@ void expression(int level) {
                     // pointer type, and not `char *`
                     *++text = PUSH;
                     *++text = IMM;
-                    *++text = sizeof(int);
+                    *++text = sizeof(intptr_t);
                     *++text = MUL;
                 }
                 *++text = ADD;
@@ -760,14 +760,14 @@ void expression(int level) {
                     *++text = SUB;
                     *++text = PUSH;
                     *++text = IMM;
-                    *++text = sizeof(int);
+                    *++text = sizeof(intptr_t);
                     *++text = DIV;
                     expr_type = INT;
                 } else if (tmp > PTR) {
                     // pointer movement
                     *++text = PUSH;
                     *++text = IMM;
-                    *++text = sizeof(int);
+                    *++text = sizeof(intptr_t);
                     *++text = MUL;
                     *++text = SUB;
                     expr_type = tmp;
@@ -821,12 +821,12 @@ void expression(int level) {
 
                 *++text = PUSH;
                 *++text = IMM;
-                *++text = (expr_type > PTR) ? sizeof(int) : sizeof(char);
+                *++text = (expr_type > PTR) ? sizeof(intptr_t) : sizeof(char);
                 *++text = (token == Inc) ? ADD : SUB;
                 *++text = (expr_type == CHAR) ? SC : SI;
                 *++text = PUSH;
                 *++text = IMM;
-                *++text = (expr_type > PTR) ? sizeof(int) : sizeof(char);
+                *++text = (expr_type > PTR) ? sizeof(intptr_t) : sizeof(char);
                 *++text = (token == Inc) ? SUB : ADD;
                 match(token);
             }
@@ -841,7 +841,7 @@ void expression(int level) {
                     // pointer, `not char *`
                     *++text = PUSH;
                     *++text = IMM;
-                    *++text = sizeof(int);
+                    *++text = sizeof(intptr_t);
                     *++text = MUL;
                 }
                 else if (tmp < PTR) {
@@ -872,7 +872,7 @@ void statement() {
     // 5. <empty statement>;
     // 6. expression; (expression end with semicolon)
 
-    int *a, *b; // bess for branch control
+    intptr_t *a, *b; // bess for branch control
 
     if (token == If) {
         // if (...) <statement> [else <statement>]
@@ -900,14 +900,14 @@ void statement() {
             match(Else);
 
             // emit code for JMP B
-            *b = (int)(text + 3);
+            *b = (intptr_t)(text + 3);
             *++text = JMP;
             b = ++text;
 
             statement();
         }
 
-        *b = (int)(text + 1);
+        *b = (intptr_t)(text + 1);
     }
     else if (token == While) {
         //
@@ -931,8 +931,8 @@ void statement() {
         statement();
 
         *++text = JMP;
-        *++text = (int)a;
-        *b = (int)(text + 1);
+        *++text = (intptr_t)a;
+        *b = (intptr_t)(text + 1);
     }
     else if (token == '{') {
         // { <statement> ... }
@@ -970,7 +970,7 @@ void statement() {
 
 void enum_declaration() {
     // parse enum [id] { a = 1, b = 3, ...}
-    int i;
+    intptr_t i;
     i = 0;
     while (token != '}') {
         if (token != Id) {
@@ -1003,8 +1003,8 @@ void enum_declaration() {
 }
 
 void function_parameter() {
-    int type;
-    int params;
+    intptr_t type;
+    intptr_t params;
     params = 0;
     while (token != ')') {
         // int name, ...
@@ -1056,8 +1056,8 @@ void function_body() {
     // 2. statements
     // }
 
-    int pos_local; // position of local variables on the stack.
-    int type;
+    intptr_t pos_local; // position of local variables on the stack.
+    intptr_t type;
     pos_local = index_of_bp;
 
     while (token == Int || token == Char) {
@@ -1196,13 +1196,13 @@ void global_declaration() {
 
         if (token == '(') {
             current_id[Class] = Fun;
-            current_id[Value] = (int)(text + 1); // the memory address of function
+            current_id[Value] = (intptr_t)(text + 1); // the memory address of function
             function_declaration();
         } else {
             // variable declaration
             current_id[Class] = Glo; // global variable
-            current_id[Value] = (int)data; // assign memory address
-            data = data + sizeof(int);
+            current_id[Value] = (intptr_t)data; // assign memory address
+            data = data + sizeof(intptr_t);
         }
 
         if (token == ',') {
@@ -1221,7 +1221,7 @@ void program() {
 }
 
 int eval() {
-    int op, *tmp;
+    intptr_t op, *tmp;
     cycle = 0;
     while (1) {
         cycle ++;
@@ -1229,19 +1229,19 @@ int eval() {
 
         if (op == IMM)       {ax = *pc++;}                                     // load immediate value to ax
         else if (op == LC)   {ax = *(char *)ax;}                               // load character to ax, address in ax
-        else if (op == LI)   {ax = *(int *)ax;}                                // load integer to ax, address in ax
+        else if (op == LI)   {ax = *(intptr_t *)ax;}                                // load integer to ax, address in ax
         else if (op == SC)   {ax = *(char *)*sp++ = ax;}                       // save character to address, value in ax, address on stack
-        else if (op == SI)   {*(int *)*sp++ = ax;}                             // save integer to address, value in ax, address on stack
+        else if (op == SI)   {*(intptr_t *)*sp++ = ax;}                             // save integer to address, value in ax, address on stack
         else if (op == PUSH) {*--sp = ax;}                                     // push the value of ax onto the stack
-        else if (op == JMP)  {pc = (int *)*pc;}                                // jump to the address
-        else if (op == JZ)   {pc = ax ? pc + 1 : (int *)*pc;}                   // jump if ax is zero
-        else if (op == JNZ)  {pc = ax ? (int *)*pc : pc + 1;}                   // jump if ax is not zero
-        else if (op == CALL) {*--sp = (int)(pc+1); pc = (int *)*pc;}           // call subroutine
-            //else if (op == RET)  {pc = (int *)*sp++;}                              // return from subroutine;
-        else if (op == ENT)  {*--sp = (int)bp; bp = sp; sp = sp - *pc++;}      // make new stack frame
+        else if (op == JMP)  {pc = (intptr_t *)*pc;}                                // jump to the address
+        else if (op == JZ)   {pc = ax ? pc + 1 : (intptr_t *)*pc;}                   // jump if ax is zero
+        else if (op == JNZ)  {pc = ax ? (intptr_t *)*pc : pc + 1;}                   // jump if ax is not zero
+        else if (op == CALL) {*--sp = (intptr_t)(pc+1); pc = (intptr_t *)*pc;}           // call subroutine
+            //else if (op == RET)  {pc = (intptr_t *)*sp++;}                              // return from subroutine;
+        else if (op == ENT)  {*--sp = (intptr_t)bp; bp = sp; sp = sp - *pc++;}      // make new stack frame
         else if (op == ADJ)  {sp = sp + *pc++;}                                // add esp, <size>
-        else if (op == LEV)  {sp = bp; bp = (int *)*sp++; pc = (int *)*sp++;}  // restore call frame and PC
-        else if (op == LEA)  {ax = (int)(bp + *pc++);}                         // load address for arguments.
+        else if (op == LEV)  {sp = bp; bp = (intptr_t *)*sp++; pc = (intptr_t *)*sp++;}  // restore call frame and PC
+        else if (op == LEA)  {ax = (intptr_t)(bp + *pc++);}                         // load address for arguments.
 
         else if (op == OR)  ax = *sp++ | ax;
         else if (op == XOR) ax = *sp++ ^ ax;
@@ -1280,8 +1280,8 @@ int eval() {
             ax = sprintf(buf,(char *)tmp[-1], tmp[-2], tmp[-3], tmp[-4], tmp[-5], tmp[-6]);
             RUNRESULT.Output(string(buf));
         }
-        else if (op == MALC) { ax = (int)malloc(*sp);}
-        else if (op == MSET) { ax = (int)memset((char *)sp[2], sp[1], *sp);}
+        else if (op == MALC) { ax = (intptr_t)malloc(*sp);}
+        else if (op == MSET) { ax = (intptr_t)memset((char *)sp[2], sp[1], *sp);}
         else if (op == MCMP) { ax = memcmp((char *)sp[2], (char *)sp[1], *sp);}
         else {
             LOG.AddErrorLog("unknown instruction:" + std::to_string(op));
@@ -1293,8 +1293,7 @@ int eval() {
 
 int Interpreter::Run(string& file_content) {
 
-    int i, fd;
-    int *tmp;
+    intptr_t *tmp;
 
     line = 1;
 
@@ -1309,15 +1308,13 @@ int Interpreter::Run(string& file_content) {
           "open read close printf malloc memset memcmp exit void main";
 
     // add keywords to symbol table
-    i = Char;
-    while (i <= While) {
+    for (int i = Char;i <= While;) {
         next();
         current_id[Token] = i++;
     }
 
     // add library to symbol table
-    i = OPEN;
-    while (i <= EXIT) {
+    for (int i = OPEN;i <= EXIT;) {
         next();
         current_id[Class] = Sys;
         current_id[Type] = INT;
@@ -1332,27 +1329,27 @@ int Interpreter::Run(string& file_content) {
 
     program();
 
-    if (!(pc = (int *)idmain[Value])) {
+    if (!(pc = (intptr_t *)idmain[Value])) {
         LOG.AddErrorLog("main() not defined\n");
         return -1;
     }
 
 
     // setup stack
-    sp = (int *)((int)stack + pool_size);
+    sp = (intptr_t *)((intptr_t)stack + pool_size);
     *--sp = EXIT; // call exit if main returns
     *--sp = PUSH; tmp = sp;
-    *--sp = (int)tmp;
+    *--sp = (intptr_t)tmp;
 
     return eval();
 }
 
 Interpreter::Interpreter() {
     pool_size = 256 * 1024; // arbitrary size
-    text = (long long *)new char[pool_size];
+    text = (intptr_t *)new char[pool_size];
     data = (char *)new char[pool_size];
-    stack = (long long *)new char[pool_size];
-    symbols = (long long *)new char[pool_size];
+    stack = (intptr_t *)new char[pool_size];
+    symbols = (intptr_t *)new char[pool_size];
     src = old_src = (char *)new char[pool_size];
     if (text == nullptr || data == nullptr
         || stack == nullptr || symbols == nullptr
@@ -1372,4 +1369,4 @@ Interpreter::~Interpreter() {
     symbols = nullptr;
     src = old_src = nullptr;
 }
-#undef int
+//#undef int

@@ -10,7 +10,7 @@ public:
 	Interpreter();
 	~Interpreter();
 	
-	long long Run(std::string &file_content);
+	int Run(std::string &file_content);
 
 private:
 
