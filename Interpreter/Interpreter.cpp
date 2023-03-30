@@ -1,8 +1,5 @@
 #include "Interpreter.h"
 #include "../RunWidget/RunWidget.h"
-#include <string>
-
-
 
 void Interpreter::next() {
     char *last_pos;

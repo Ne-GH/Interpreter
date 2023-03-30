@@ -1,7 +1,7 @@
 #ifndef INTERPRETER_H
 #define INTERPRETER_H
 
-#include <string_view>
+#include <string>
 
 #include "../Logs/Log.h"
 
