@@ -15,22 +15,32 @@ public:
 private:
     int _pool_size = 1024*256;
     int token; // current token
-
-// instructions
-    enum { LEA ,IMM ,JMP ,CALL,JZ  ,JNZ ,ENT ,ADJ ,LEV ,LI  ,LC  ,SI  ,SC  ,PUSH,
-        OR  ,XOR ,AND ,EQ  ,NE  ,LT  ,GT  ,LE  ,GE  ,SHL ,SHR ,ADD ,SUB ,MUL ,DIV ,MOD ,
-        OPEN,READ,CLOS,PRTF,MALC,MSET,MCMP,EXIT };
-
-// tokens and classes (operators last and in precedence order)
-// copied from c4
+// 指令集
     enum {
-        Num = 128, Fun, Sys, Glo, Loc, Id,
-        Char, Else, Enum, If, Int, Return, Sizeof, While,
-        Assign, Cond, Lor, Lan, Or, Xor, And, Eq, Ne, Lt, Gt, Le, Ge, Shl, Shr, Add, Sub, Mul, Div, Mod, Inc, Dec, Brak
+        // MOV,0-4
+        IMM ,LC ,LI ,SC ,SI ,
+        // Stack,5
+        PUSH ,// IMM
+        // JMP,6-8
+        JMP ,JZ ,JNZ ,
+        // CALL,9-13
+        CALL ,ENT ,ADJ ,LEV ,LEA ,
+        // Math,14-29
+        OR ,XOR ,AND ,EQ ,NE ,LT ,GT ,LE ,GE ,SHL ,SHR ,ADD ,SUB ,MUL ,DIV ,MOD ,
+        // 内置命令,30-37
+        OPEN ,READ ,CLOS ,PRTF ,MALC ,MSET ,MCMP ,EXIT
+    };
+// 词法分析器
+    enum {
+        Num = 128 ,Fun ,Sys ,Glo ,Loc ,Id ,
+        Char ,Else ,Enum ,If ,Int ,Return ,Sizeof ,While ,
+        Assign ,Cond ,Lor ,Lan ,Or ,Xor ,And ,Eq ,Ne ,Lt ,Gt ,Le ,Ge ,Shl ,Shr ,Add ,Sub ,Mul ,Div ,Mod ,Inc ,Dec ,Brak
     };
 
 // fields of identifier
-    enum {Token, Hash, Name, Type, Class, Value, BType, BClass, BValue, IdSize};
+    enum {
+        Token, Hash, Name, Type, Class, Value, BType, BClass, BValue, IdSize
+    };
 
 
 // types of variable/function

@@ -1,7 +1,6 @@
 #include "Interpreter.h"
 #include "../RunWidget/RunWidget.h"
 #include <string>
-using std::string;
 
 
 
@@ -1218,7 +1217,7 @@ int Interpreter::eval() {
             tmp = sp + pc[1];
             char buf[1024] = {0};
             ax = sprintf(buf,(char *)tmp[-1], tmp[-2], tmp[-3], tmp[-4], tmp[-5], tmp[-6]);
-            RUNRESULT.Output(string(buf));
+            RUNRESULT.Output(std::string(buf));
         }
         else if (op == MALC) { ax = (intptr_t)malloc(*sp);}
         else if (op == MSET) { ax = (intptr_t)memset((char *)sp[2], sp[1], *sp);}
@@ -1230,7 +1229,7 @@ int Interpreter::eval() {
     }
 }
 
-int Interpreter::Run(string& file_content) {
+int Interpreter::Run(std::string& file_content) {
     line = 1;
 
     memset(text, 0, _pool_size);
