@@ -259,7 +259,10 @@ void Interpreter::match(intptr_t tk) {
 }
 
 
-// 递归下降BNF
+/*******************************************************************************
+ * 递归下降 BNF
+ * 
+*******************************************************************************/
 void Interpreter::expression(intptr_t level) {
     // expressions have various format.
     // but majorly can be divided into two parts: unit and operator
@@ -280,13 +283,12 @@ void Interpreter::expression(intptr_t level) {
     intptr_t *addr;
     if (!token) {
         LOG.AddErrorLog(std::to_string(line)
-                 + ": unexpected token EOF of expression");
+                 + ":遇到EOF,意外结束");
         exit(-1);
     }
     if (token == Num) {
         match(Num);
 
-        // emit code
         *++text = IMM;
         *++text = token_val;
         expr_type = INT;
