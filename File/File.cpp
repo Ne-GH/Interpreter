@@ -1,7 +1,8 @@
 #include "File.h"
 #include <QFileDialog>
 #include <fstream>
-
+#include "../Logs/Log.h"
+#include <codecvt>
 auto File::GetPath() -> Path{
 	return _path;
 }
@@ -23,14 +24,18 @@ auto File::Create() -> Path {
 
 void File::Open() {
 	_path = QFileDialog::getOpenFileName(
-		_window,
+		nullptr,
 		"打开文件",
 		"/",
-		"C 文件(*.c);;\
-		文本文件(*.txt);;\
-		所有文件(*.*)").toStdString();
-	Read();
+		"C文件(*.c);;所有文件(*.*)").toStdString();
 
+#if defined(_WIN32) || defined(_WIN64)
+	std::wstring_convert<std::codecvt_utf8<wchar_t>> conv;
+	std::wstring wpath = conv.from_bytes(_path.string());
+	_path = std::filesystem::path(wpath);
+#endif
+
+	Read();
 }
 
 void File::Read() {

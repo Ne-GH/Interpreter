@@ -1256,8 +1256,14 @@ int Interpreter::Run(std::string& file_content) {
     memset(symbols, 0, _pool_size);
 
 
+#ifdef _MSC_VER
+    std::string temp = "char else enum if int return sizeof while "
+          "open read close printf malloc memset memcmp exit void main";
+    src = &temp[0];
+#else
     src = "char else enum if int return sizeof while "
           "open read close printf malloc memset memcmp exit void main";
+#endif
 
     // add keywords to symbol table
     for(int i = Char;i <= While;) {
