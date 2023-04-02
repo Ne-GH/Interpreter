@@ -260,9 +260,6 @@ void Interpreter::match(intptr_t tk) {
 
 
 // 递归下降BNF
-/*******************************************************************************
- *
-*******************************************************************************/
 void Interpreter::expression(intptr_t level) {
     // expressions have various format.
     // but majorly can be divided into two parts: unit and operator
@@ -1313,10 +1310,7 @@ Interpreter::Interpreter() {
     }
 }
 Interpreter::~Interpreter() {
-    delete delete_text        LOG.AddErrorLog(std::to_string(line)
-                + ": expected token: "
-                + std::to_string(tk));
-;
+    delete delete_text;
     delete delete_data;
     delete delete_stack;
     delete delete_src;
