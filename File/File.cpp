@@ -3,6 +3,14 @@
 #include <fstream>
 #include "../Logs/Log.h"
 #include <codecvt>
+
+void StringPathToWStringPath(std::filesystem::path& path) {
+	std::wstring_convert<std::codecvt_utf8<wchar_t>> conv;
+	std::wstring wpath = conv.from_bytes(path.string());
+	path = std::filesystem::path(wpath);
+	return;
+}
+
 auto File::GetPath() -> Path{
 	return _path;
 }
@@ -18,6 +26,9 @@ auto File::Create() -> Path {
 		".", 
 		"C语言文件(*.c);;All Files (*)").toStdString();
 	
+#if defined(_WIN32) || defined(_WIN64)
+	StringPathToWStringPath(_path);
+#endif
 	std::fstream file_system(_path,std::ios::in | std::ios::out | std::ios::trunc);
 	return _path;
 }
@@ -30,10 +41,9 @@ void File::Open() {
 		"C文件(*.c);;所有文件(*.*)").toStdString();
 
 #if defined(_WIN32) || defined(_WIN64)
-	std::wstring_convert<std::codecvt_utf8<wchar_t>> conv;
-	std::wstring wpath = conv.from_bytes(_path.string());
-	_path = std::filesystem::path(wpath);
+	StringPathToWStringPath(_path);
 #endif
+
 
 	Read();
 }
