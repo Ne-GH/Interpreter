@@ -1,6 +1,10 @@
 #include "Interpreter.h"
 #include "../RunWidget/RunWidget.h"
 
+/*******************************************************************************
+ * 词法分析
+ * 每次处理一个标记token
+*******************************************************************************/
 void Interpreter::next() {
     char *last_pos;
     intptr_t hash = 0;
@@ -8,237 +12,257 @@ void Interpreter::next() {
     while (token = *src) {
         src++;
 
-        if (token == '\n') {
-            ++line;
-        }
-        else if (token == '#') {
-            // skip macro, because we will not support it
-            while (*src != 0 && *src != '\n') {
-                src++;
-            }
-        }
-        else if ((token >= 'a' && token <= 'z') || (token >= 'A' && token <= 'Z') || (token == '_')) {
-
-            // parse identifier
+        // 变量
+        if (std::isalpha(token) || (token == '_')) {
             last_pos = src - 1;
             hash = token;
-
-            while ((*src >= 'a' && *src <= 'z') || (*src >= 'A' && *src <= 'Z') || (*src >= '0' && *src <= '9') || (*src == '_')) {
+            while (std::isalnum(*src) || (*src == '_')) {
                 hash = hash * 147 + *src;
                 src++;
             }
 
-            // look for existing identifier, linear search
             current_id = symbols;
             while (current_id[Token]) {
+                // 该标记在符号表中不存在，即hash和name均不同
                 if (current_id[Hash] == hash && !memcmp((char *)current_id[Name], last_pos, src - last_pos)) {
-                    //found one, return
                     token = current_id[Token];
                     return;
                 }
                 current_id = current_id + IdSize;
             }
 
-
-            // store new ID
             current_id[Name] = (intptr_t)last_pos;
             current_id[Hash] = hash;
             token = current_id[Token] = Id;
             return;
         }
-        else if (token >= '0' && token <= '9') {
+        // 数字字面量
+        // 123
+        // 0123
+        // 0x123
+        else if (std::isdigit(token) == true) {
             // parse number, three kinds: dec(123) hex(0x123) oct(017)
             token_val = token - '0';
+            // 十进制
             if (token_val > 0) {
-                // dec, starts with [1-9]
-                while (*src >= '0' && *src <= '9') {
+                while (std::isdigit(*src)) {
                     token_val = token_val*10 + *src++ - '0';
                 }
-            } else {
-                // starts with number 0
+            }
+            else {
+                // 16进制
                 if (*src == 'x' || *src == 'X') {
-                    //hex
                     token = *++src;
-                    while ((token >= '0' && token <= '9') || (token >= 'a' && token <= 'f') || (token >= 'A' && token <= 'F')) {
+                    while (std::isdigit(token) || (token >= 'a' && token <= 'f') || (token >= 'A' && token <= 'F')) {
+                        // 取token的低4位，后根据是大写还是小写进行+9 或 +0的修正
                         token_val = token_val * 16 + (token & 15) + (token >= 'A' ? 9 : 0);
                         token = *++src;
                     }
-                } else {
-                    // oct
+                }
+                // 8进制
+                else {
                     while (*src >= '0' && *src <= '7') {
                         token_val = token_val*8 + *src++ - '0';
                     }
                 }
             }
-
             token = Num;
             return;
         }
-        else if (token == '/') {
-            if (*src == '/') {
-                // skip comments
+        else switch (token) {
+            case '\n':
+                ++line;
+                break;
+            case '#':
                 while (*src != 0 && *src != '\n') {
-                    ++src;
+                    src ++;
                 }
-            } else {
-                // divide operator
-                token = Div;
-                return;
-            }
-        }
-        else if (token == '"' || token == '\'') {
-            // parse string literal, currently, the only supported escape
-            // character is '\n', store the string literal into data.
-            last_pos = data;
-            while (*src != 0 && *src != token) {
-                token_val = *src++;
-                if (token_val == '\\') {
-                    // escape character
-                    token_val = *src++;
-                    if (token_val == 'n') {
-                        token_val = '\n';
+                break;
+            case '/':   // //
+                if (*src == '/') {
+                    while (*src != 0 && *src != '\n') {
+                        ++src;
                     }
                 }
-
-                if (token == '"') {
-                    *data++ = token_val;
+                else {  // /
+                    token = Div;
+                    return;
                 }
-            }
-
-            src++;
-            // if it is a single character, return Num token
-            if (token == '"') {
-                token_val = (intptr_t)last_pos;
-            } else {
-                token = Num;
-            }
-
-            return;
-        }
-        else if (token == '=') {
-            // parse '==' and '='
-            if (*src == '=') {
-                src ++;
-                token = Eq;
-            } else {
-                token = Assign;
-            }
-            return;
-        }
-        else if (token == '+') {
-            // parse '+' and '++'
-            if (*src == '+') {
-                src ++;
-                token = Inc;
-            } else {
-                token = Add;
-            }
-            return;
-        }
-        else if (token == '-') {
-            // parse '-' and '--'
-            if (*src == '-') {
-                src ++;
-                token = Dec;
-            } else {
-                token = Sub;
-            }
-            return;
-        }
-        else if (token == '!') {
-            // parse '!='
-            if (*src == '=') {
+                break;
+            case '"':
+            case '\'':
+                // parse string literal, currently, the only supported escape
+                // character is '\n', store the string literal into data.
+                last_pos = data;
+                // 字符串是否结束
+                while (*src != 0 && *src != token) {
+                    // 如果是单个字符，仅会保留最后一个字符
+                    token_val = *src++;
+                    // 支持转义'\n'
+                    if (token_val == '\\') {
+                        token_val = *src++;
+                        if (token_val == 'n') {
+                            token_val = '\n';
+                        }
+                    }
+                    // 如果是字符串，则存储在data中
+                    if (token == '"') {
+                        *data++ = token_val;
+                    }
+                }
                 src++;
-                token = Ne;
-            }
-            return;
-        }
-        else if (token == '<') {
-            // parse '<=', '<<' or '<'
-            if (*src == '=') {
-                src ++;
-                token = Le;
-            } else if (*src == '<') {
-                src ++;
-                token = Shl;
-            } else {
-                token = Lt;
-            }
-            return;
-        }
-        else if (token == '>') {
-            // parse '>=', '>>' or '>'
-            if (*src == '=') {
-                src ++;
-                token = Ge;
-            } else if (*src == '>') {
-                src ++;
-                token = Shr;
-            } else {
-                token = Gt;
-            }
-            return;
-        }
-        else if (token == '|') {
-            // parse '|' or '||'
-            if (*src == '|') {
-                src ++;
-                token = Lor;
-            } else {
-                token = Or;
-            }
-            return;
-        }
-        else if (token == '&') {
-            // parse '&' and '&&'
-            if (*src == '&') {
-                src ++;
-                token = Lan;
-            } else {
-                token = And;
-            }
-            return;
-        }
-        else if (token == '^') {
-            token = Xor;
-            return;
-        }
-        else if (token == '%') {
-            token = Mod;
-            return;
-        }
-        else if (token == '*') {
-            token = Mul;
-            return;
-        }
-        else if (token == '[') {
-            token = Brak;
-            return;
-        }
-        else if (token == '?') {
-            token = Cond;
-            return;
-        }
-        else if (token == '~' || token == ';' || token == '{' || token == '}' || token == '(' || token == ')' || token == ']' || token == ',' || token == ':') {
-            // directly return the character as token;
-            return;
+                if (token == '"') {
+                    token_val = (intptr_t)last_pos;
+                }
+                // 单个字符被认为是数字
+                else {
+                    token = Num;
+                }
+                return;
+                break;
+            case '=':
+                if (*src == '=') {  // ==
+                    src ++;
+                    token = Eq;
+                }
+                else {              // =
+                    token = Assign;
+                }
+                return;
+                break;
+            case '+':
+                if (*src == '+') {  // ++
+                    src ++;
+                    token = Inc;
+                }
+                else {              // +
+                    token = Add;
+                }
+                return;
+                break;
+            case '-':
+                if (*src == '-') {  // --
+                    src ++;
+                    token = Dec;
+                }
+                else {              // -
+                    token = Sub;
+                }
+                return;
+                break;
+            case '!':
+                if (*src == '=') {  // !=
+                    src++;
+                    token = Ne;
+                }
+                return;
+                break;
+            case '<':
+                if (*src == '=') {      // <=
+                    src ++;
+                    token = Le;
+                }
+                else if (*src == '<') { // <<
+                    src ++;
+                    token = Shl;
+                }
+                else {                  // <
+                    token = Lt;
+                }
+                return;
+                break;
+            case '>':
+                if (*src == '=') {      // >=
+                    src ++;
+                    token = Ge;
+                }
+                else if (*src == '>') { // >>
+                    src ++;
+                    token = Shr;
+                }
+                else {                  // >
+                    token = Gt;
+                }
+                return;
+                break;
+            case '|':
+                if (*src == '|') {      // ||
+                    src ++;
+                    token = Lor;
+                }
+                else {                  // |
+                    token = Or;
+                }
+                return;
+                break;
+            case '&':
+                if (*src == '&') {      // &&
+                    src ++;
+                    token = Lan;
+                }
+                else {                  // &
+                    token = And;
+                }
+                return;
+                break;
+            case '^':
+                token = Xor;
+                return;
+                break;
+            case '%':
+                token = Mod;
+                return;
+                break;
+            case '*':
+                token = Mul;
+                return;
+                break;
+            case '[':
+                token = Brak;
+                return;
+                break;
+            case '?':
+                token = Cond;
+                return;
+                break;
+            case '~':
+            case ';':
+            case '{':
+            case '}':
+            case '(':
+            case ')':
+            case ']':
+            case ',':
+            case ':':
+                // 无需进一步处理，直接将字符本身作为token返回
+                return;
+                break;
         }
     }
 }
-
+/*******************************************************************************
+ * 查看当前token是否是我们的期望
+ * 如果与期望的token一致则获取下一个token
+ * 否则exit -1
+*******************************************************************************/
 void Interpreter::match(intptr_t tk) {
     if (token == tk) {
         next();
-    } else {
-        LOG.AddErrorLog(std::to_string(line)
-                + ": expected token: "
-                + std::to_string(tk));
+    }
+    else {
+        LOG.AddErrorLog(
+                "在第" + std::to_string(line) + "行,"
+                + "期望的token为:" + std::to_string(tk)
+                + "实际的token为:" + std::to_string(token));
         exit(-1);
     }
 }
 
 
 // 递归下降BNF
+/*******************************************************************************
+ *
+*******************************************************************************/
 void Interpreter::expression(intptr_t level) {
     // expressions have various format.
     // but majorly can be divided into two parts: unit and operator
@@ -1289,7 +1313,10 @@ Interpreter::Interpreter() {
     }
 }
 Interpreter::~Interpreter() {
-    delete delete_text;
+    delete delete_text        LOG.AddErrorLog(std::to_string(line)
+                + ": expected token: "
+                + std::to_string(tk));
+;
     delete delete_data;
     delete delete_stack;
     delete delete_src;
