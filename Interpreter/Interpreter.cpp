@@ -37,11 +37,7 @@ void Interpreter::next() {
             return;
         }
         // 数字字面量
-        // 123
-        // 0123
-        // 0x123
         else if (std::isdigit(token) == true) {
-            // parse number, three kinds: dec(123) hex(0x123) oct(017)
             token_val = token - '0';
             // 十进制
             if (token_val > 0) {
@@ -91,8 +87,6 @@ void Interpreter::next() {
                 break;
             case '"':
             case '\'':
-                // parse string literal, currently, the only supported escape
-                // character is '\n', store the string literal into data.
                 last_pos = data;
                 // 字符串是否结束
                 while (*src != 0 && *src != token) {
@@ -264,295 +258,279 @@ void Interpreter::match(intptr_t tk) {
  * 
 *******************************************************************************/
 void Interpreter::expression(intptr_t level) {
-    // expressions have various format.
-    // but majorly can be divided into two parts: unit and operator
-    // for example `(char) *a[10] = (int *) func(b > 0 ? 10 : 20);
-    // `a[10]` is an unit while `*` is an operator.
-    // `func(...)` in total is an unit.
-    // so we should first parse those unit and unary operators
-    // and then the binary ones
-    //
-    // also the expression can be in the following types:
-    //
-    // 1. unit_unary ::= unit | unit unary_op | unary_op unit
-    // 2. expr ::= unit_unary (bin_op unit_unary ...)
-
-    // unit_unary()
     intptr_t *id;
-    intptr_t tmp;
     intptr_t *addr;
     if (!token) {
-        LOG.AddErrorLog(std::to_string(line)
-                 + ":遇到EOF,意外结束");
+        LOG.AddErrorLog(std::to_string(line) + ":遇到EOF,意外结束");
         exit(-1);
     }
-    if (token == Num) {
-        match(Num);
+    switch (token) {
+        case Num: {
+            match(Num);
 
-        *++text = IMM;
-        *++text = token_val;
-        expr_type = INT;
-    }
-    else if (token == '"') {
-        // continous string "abc" "abc"
-
-
-        // emit code
-        *++text = IMM;
-        *++text = token_val;
-
-        match('"');
-        // store the rest strings
-        while (token == '"') {
-            match('"');
-        }
-
-        // append the end of string character '\0', all the data are default
-        // to 0, so just move data one position forward.
-        data = (char *)(((intptr_t)data + sizeof(intptr_t)) & (-sizeof(intptr_t)));
-        expr_type = PTR;
-    }
-    else if (token == Sizeof) {
-        // sizeof is actually an unary operator
-        // now only `sizeof(int)`, `sizeof(char)` and `sizeof(*...)` are
-        // supported.
-        match(Sizeof);
-        match('(');
-        expr_type = INT;
-
-        if (token == Int) {
-            match(Int);
-        } else if (token == Char) {
-            match(Char);
-            expr_type = CHAR;
-        }
-
-        while (token == Mul) {
-            match(Mul);
-            expr_type = expr_type + PTR;
-        }
-
-        match(')');
-
-        // emit code
-        *++text = IMM;
-        *++text = (expr_type == CHAR) ? sizeof(char) : sizeof(intptr_t);
-
-        expr_type = INT;
-    }
-    else if (token == Id) {
-        // there are several type when occurs to Id
-        // but this is unit, so it can only be
-        // 1. function call
-        // 2. Enum variable
-        // 3. global/local variable
-        match(Id);
-
-        id = current_id;
-
-        if (token == '(') {
-            // function call
-            match('(');
-
-            // pass in arguments
-            tmp = 0; // number of arguments
-            while (token != ')') {
-                expression(Assign);
-                *++text = PUSH;
-                tmp ++;
-
-                if (token == ',') {
-                    match(',');
-                }
-
-            }
-            match(')');
-
-            // emit code
-            if (id[Class] == Sys) {
-                // system functions
-                *++text = id[Value];
-            }
-            else if (id[Class] == Fun) {
-                // function call
-                *++text = CALL;
-                *++text = id[Value];
-            }
-            else {
-                LOG.AddErrorLog(std::to_string(line)
-                        + "%d: bad function call");
-                exit(-1);
-            }
-
-            // clean the stack for arguments
-            if (tmp > 0) {
-                *++text = ADJ;
-                *++text = tmp;
-            }
-            expr_type = id[Type];
-        }
-        else if (id[Class] == Num) {
-            // enum variable
             *++text = IMM;
-            *++text = id[Value];
+            *++text = token_val;
             expr_type = INT;
+            break;
+
         }
-        else {
-            // variable
-            if (id[Class] == Loc) {
-                *++text = LEA;
-                *++text = index_of_bp - id[Value];
-            }
-            else if (id[Class] == Glo) {
-                *++text = IMM;
-                *++text = id[Value];
-            }
-            else {
-                LOG.AddErrorLog(std::to_string(line)
-                        + ": undefined variable\n");
-                exit(-1);
+        case '"': {
+            *++text = IMM;
+            *++text = token_val;
+
+            // 多行字符串支持
+            match('"');
+            while (token == '"') {
+                match('"');
             }
 
-            // emit code, default behaviour is to load the value of the
-            // address which is stored in `ax`
-            expr_type = id[Type];
-            *++text = (expr_type == CHAR) ? LC : LI;
+            // 内存对齐，并添加NUL
+            data = (char *)(((intptr_t)data + sizeof(intptr_t)) & (-sizeof(intptr_t)));
+            expr_type = PTR;        // 字符串表达式的结果是指针
+            break;
+
         }
-    }
-    else if (token == '(') {
-        // cast or parenthesis
-        match('(');
-        if (token == Int || token == Char) {
-            tmp = (token == Char) ? CHAR : INT; // cast type
-            match(token);
+        case Sizeof: {
+
+            match(Sizeof);
+            match('(');
+            expr_type = INT;
+
+            if (token == Int) {
+                match(Int);
+            }
+            else if (token == Char) {
+                match(Char);
+                expr_type = CHAR;
+            }
+            // 多重指针
             while (token == Mul) {
                 match(Mul);
-                tmp = tmp + PTR;
+                expr_type = expr_type + PTR;
             }
 
             match(')');
 
-            expression(Inc); // cast has precedence as Inc(++)
-
-            expr_type  = tmp;
-        } else {
-            // normal parenthesis
-            expression(Assign);
-            match(')');
-        }
-    }
-    else if (token == Mul) {
-        // dereference *<addr>
-        match(Mul);
-        expression(Inc); // dereference has the same precedence as Inc(++)
-
-        if (expr_type >= PTR) {
-            expr_type = expr_type - PTR;
-        } else {
-            LOG.AddErrorLog(std::to_string(line)
-                    + "%d: bad dereference");
-            exit(-1);
-        }
-
-        *++text = (expr_type == CHAR) ? LC : LI;
-    }
-    else if (token == And) {
-        // get the address of
-        match(And);
-        expression(Inc); // get the address of
-        if (*text == LC || *text == LI) {
-            text --;
-        } else {
-            LOG.AddErrorLog(std::to_string(line)
-                    + "%d: bad address of");
-            exit(-1);
-        }
-
-        expr_type = expr_type + PTR;
-    }
-    else if (token == '!') {
-        // not
-        match('!');
-        expression(Inc);
-
-        // emit code, use <expr> == 0
-        *++text = PUSH;
-        *++text = IMM;
-        *++text = 0;
-        *++text = EQ;
-
-        expr_type = INT;
-    }
-    else if (token == '~') {
-        // bitwise not
-        match('~');
-        expression(Inc);
-
-        // emit code, use <expr> XOR -1
-        *++text = PUSH;
-        *++text = IMM;
-        *++text = -1;
-        *++text = XOR;
-
-        expr_type = INT;
-    }
-    else if (token == Add) {
-        // +var, do nothing
-        match(Add);
-        expression(Inc);
-
-        expr_type = INT;
-    }
-    else if (token == Sub) {
-        // -var
-        match(Sub);
-
-        if (token == Num) {
             *++text = IMM;
-            *++text = -token_val;
-            match(Num);
-        } else {
+            *++text = (expr_type == CHAR) ? sizeof(char) : sizeof(intptr_t);
 
+            expr_type = INT;            // sizeof表达式的结果是int
+            break;
+        }
+        case Id: {
+            match(Id);
+            id = current_id;
+
+            // 函数调用
+            if (token == '(') {
+                match('(');
+
+                intptr_t arg_num = 0;
+                while (token != ')') {
+                    expression(Assign);
+                    *++text = PUSH;
+                    arg_num ++;
+
+                    if (token == ',') {
+                        match(',');
+                    }
+
+                }
+                match(')');
+
+                // 系统调用,直接给出系统函数地址，无需call
+                if (id[Class] == Sys) {
+                    *++text = id[Value];
+                }
+                    // 函数调用
+                else if (id[Class] == Fun) {
+                    *++text = CALL;
+                    *++text = id[Value];
+                }
+                else {
+                    LOG.AddErrorLog(std::to_string(line) + "错误的函数调用");
+                    exit(-1);
+                }
+
+                // 清除栈中的参数
+                if (arg_num > 0) {
+                    *++text = ADJ;
+                    *++text = arg_num;
+                }
+                expr_type = id[Type];
+            }
+                // 枚举
+            else if (id[Class] == Num) {
+                *++text = IMM;
+                *++text = id[Value];
+                expr_type = INT;
+            }
+                // 变量
+            else {
+                // 局部变量
+                if (id[Class] == Loc) {
+                    *++text = LEA;
+                    *++text = index_of_bp - id[Value];
+                }
+                    // 全局变量
+                else if (id[Class] == Glo) {
+                    *++text = IMM;
+                    *++text = id[Value];
+                }
+                else {
+                    LOG.AddErrorLog(std::to_string(line) + "未定义的变量");
+                    exit(-1);
+                }
+
+                expr_type = id[Type];
+                *++text = (expr_type == CHAR) ? LC : LI;
+            }
+            break;
+
+        }
+        case '(': { // 类型转换
+            match('(');
+            if (token == Int || token == Char) {
+                int tmp_type = (token == Char) ? CHAR : INT; // 类型转换
+                match(token);
+                while (token == Mul) {
+                    match(Mul);
+                    tmp_type = tmp_type + PTR;
+                }
+
+                match(')');
+
+                expression(Inc); // 处理优先级
+
+                expr_type  = tmp_type;
+            }
+            // 如果不是类型转换就按普通的表达式处理
+            else {
+                expression(Assign);
+                match(')');
+            }
+            break;
+        }
+        case Mul: {
+            match(Mul);
+            expression(Inc); // 处理优先级
+            // 是指针的解引用
+            if (expr_type >= PTR) {
+                expr_type = expr_type - PTR;
+            }
+            else {
+                LOG.AddErrorLog(std::to_string(line) + "错误的解引用");
+                exit(-1);
+            }
+
+            *++text = (expr_type == CHAR) ? LC : LI;
+            break;
+        }
+        case And: {
+            // 取地址
+            match(And);
+            expression(Inc);
+            // 避免递归解析时产生的指令影响指令运行
+            if (*text == LC || *text == LI) {
+                text --;
+            }
+            else {
+                LOG.AddErrorLog(std::to_string(line) + "错误的取地址");
+                exit(-1);
+            }
+
+            expr_type = expr_type + PTR;
+            break;
+        }
+        case '!': {
+            match('!');
+            expression(Inc);
+
+            *++text = PUSH;
+            *++text = IMM;
+            *++text = 0;
+            *++text = EQ;
+
+            expr_type = INT;
+            break;
+        }
+        case '~': {
+            // num ^ 0xfff
+            match('~');
+            expression(Inc);
+            *++text = PUSH;
             *++text = IMM;
             *++text = -1;
-            *++text = PUSH;
+            *++text = XOR;
+
+            expr_type = INT;
+            break;
+        }
+        case Add: {
+            // 正
+            match(Add);
             expression(Inc);
-            *++text = MUL;
-        }
 
-        expr_type = INT;
-    }
-    else if (token == Inc || token == Dec) {
-        tmp = token;
-        match(token);
-        expression(Inc);
-        if (*text == LC) {
-            *text = PUSH;  // to duplicate the address
-            *++text = LC;
-        } else if (*text == LI) {
-            *text = PUSH;
-            *++text = LI;
-        } else {
-            LOG.AddErrorLog(std::to_string(line)
-                    + "%d: bad lvalue of pre-increment");
+            expr_type = INT;
+            break;
+        }
+        case Sub: {
+            // 负
+            match(Sub);
+            // 数字直接取负
+            if (token == Num) {
+                *++text = IMM;
+                *++text = -token_val;
+                match(Num);
+            }
+            // 表达式递归求值 * -1
+            else {
+                *++text = IMM;
+                *++text = -1;
+                *++text = PUSH;
+                expression(Inc);
+                *++text = MUL;
+            }
+
+            expr_type = INT;
+            break;
+        }
+        case Inc:
+        case Dec: {
+            // 前置 ++ --
+            intptr_t old_token = token;
+            match(token);
+            expression(Inc);
+            // LC和LI的出现表示当前操作的是数组或指针
+            if (*text == LC) {
+                *text = PUSH;
+                *++text = LC;
+            }
+            else if (*text == LI) {
+                *text = PUSH;
+                *++text = LI;
+            }
+            else {
+                LOG.AddErrorLog(std::to_string(line) + "不可前置操作的左值");
+                exit(-1);
+            }
+            *++text = PUSH;
+            *++text = IMM;
+            *++text = (expr_type > PTR) ? sizeof(intptr_t) : sizeof(char);
+            *++text = (old_token == Inc) ? ADD : SUB;
+            *++text = (expr_type == CHAR) ? SC : SI;
+            break;
+        }
+        default:
+            LOG.AddErrorLog(std::to_string(line) + "编译错误");
             exit(-1);
-        }
-        *++text = PUSH;
-        *++text = IMM;
-        *++text = (expr_type > PTR) ? sizeof(intptr_t) : sizeof(char);
-        *++text = (tmp == Inc) ? ADD : SUB;
-        *++text = (expr_type == CHAR) ? SC : SI;
-    }
-    else {
-        LOG.AddErrorLog(std::to_string(line)
-                + "%d: bad expression");
-        exit(-1);
-    }
 
+            break;
+    }
     // binary operator and postfix operators.
     while (token >= level) {
         // handle according to current operator's precedence
-        tmp = expr_type;
+        intptr_t tmp = expr_type;
         if (token == Assign) {
             // var = expr;
             match(Assign);
@@ -560,7 +538,7 @@ void Interpreter::expression(intptr_t level) {
                 *text = PUSH; // save the lvalue's pointer
             } else {
                 LOG.AddErrorLog(std::to_string(line)
-                        + "%d: bad lvalue in assignment");
+                                + "%d: bad lvalue in assignment");
                 exit(-1);
             }
             expression(Assign);
@@ -578,7 +556,7 @@ void Interpreter::expression(intptr_t level) {
                 match(':');
             } else {
                 LOG.AddErrorLog(std::to_string(line)
-                        + "%d: missing colon in conditional");
+                                + "%d: missing colon in conditional");
                 exit(-1);
             }
             *addr = (intptr_t)(text + 3);
@@ -774,7 +752,7 @@ void Interpreter::expression(intptr_t level) {
             }
             else {
                 LOG.AddErrorLog(std::to_string(line)
-                        + "%d: bad value in increment");
+                                + "%d: bad value in increment");
                 exit(-1);
             }
 
@@ -805,7 +783,7 @@ void Interpreter::expression(intptr_t level) {
             }
             else if (tmp < PTR) {
                 LOG.AddErrorLog(std::to_string(line)
-                        + "%d: pointer type expected");
+                                + "%d: pointer type expected");
                 exit(-1);
             }
             expr_type = tmp - PTR;
@@ -814,8 +792,8 @@ void Interpreter::expression(intptr_t level) {
         }
         else {
             LOG.AddErrorLog(std::to_string(line)
-                    + ": compiler error, token = "
-                    + std::to_string(token));
+                            + ": compiler error, token = "
+                            + std::to_string(token));
             exit(-1);
         }
     }

@@ -37,42 +37,42 @@ private:
         Assign ,Cond ,Lor ,Lan ,Or ,Xor ,And ,Eq ,Ne ,Lt ,Gt ,Le ,Ge ,Shl ,Shr ,Add ,Sub ,Mul ,Div ,Mod ,Inc ,Dec ,Brak
     };
 
-// fields of identifier
+    // 符号表
     enum {
-        Token, Hash, Name, Type, Class, Value, BType, BClass, BValue, IdSize
+        Token,
+        Hash,
+        Name,   // 标识符本身的字符串
+        Type,   // 标识符类型，CHAR/INT/PTR
+        Class,  // 标识符类型，局部/全局变量
+        Value,  // 标识符的值
+        BType,
+        BClass,
+        BValue,
+        IdSize
     };
 
 
-// types of variable/function
+    // 数据类型
     enum { CHAR, INT, PTR };
 
 
     intptr_t *text, *stack;
-    char *data; // data segment
+    char *data;
     intptr_t *idmain;
 
     char *src, *old_src;  // pointer to source code string;
 
-    intptr_t *pc, *bp, *sp, ax, cycle; // virtual machine registers
+    intptr_t *pc, *bp, *sp, ax, cycle;
 
     intptr_t *current_id, // current parsed ID
-    *symbols,    // symbol table
-    line,        // line number of source code
-    token_val;   // value of current token (mainly for number)
+        *symbols,    // symbol table
+        line,        // line number of source code
+        token_val;   // value of current token (mainly for number)
 
     int basetype;    // the type of a declaration, make it global for convenience
-    int expr_type;   // the type of an expression
+    int expr_type;   // 表达式的类型
 
-// function frame
-//
-// 0: arg 1
-// 1: arg 2
-// 2: arg 3
-// 3: return address
-// 4: old bp pointer  <- index_of_bp
-// 5: local var 1
-// 6: local var 2
-    intptr_t index_of_bp; // index of bp pointer on stack
+    intptr_t index_of_bp; // 局部的栈底指针
 
 
     intptr_t *delete_text,*delete_stack;
