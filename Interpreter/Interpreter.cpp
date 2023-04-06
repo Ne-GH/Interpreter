@@ -741,7 +741,7 @@ void Interpreter::expression(intptr_t level) {
         else if (token == Inc || token == Dec) {
             // postfix inc(++) and dec(--)
             // we will increase the value to the variable and decrease it
-            // on `ax` to get its original value.
+            // on `rax` to get its original value.
             if (*text == LI) {
                 *text = PUSH;
                 *++text = LI;
@@ -1158,71 +1158,142 @@ void Interpreter::program() {
 
 // 虚拟机模拟汇编运行
 int Interpreter::eval() {
-    intptr_t op, *tmp;
     cycle = 0;
     while (1) {
         cycle ++;
-        op = *pc++; // get next operation code
-
-        if (op == IMM)       {ax = *pc++;}                                     // load immediate value to ax
-        else if (op == LC)   {ax = *(char *)ax;}                               // load character to ax, address in ax
-        else if (op == LI)   {ax = *(intptr_t *)ax;}                                // load integer to ax, address in ax
-        else if (op == SC)   {ax = *(char *)*sp++ = ax;}                       // save character to address, value in ax, address on stack
-        else if (op == SI)   {*(intptr_t *)*sp++ = ax;}                             // save integer to address, value in ax, address on stack
-        else if (op == PUSH) {*--sp = ax;}                                     // push the value of ax onto the stack
-        else if (op == JMP)  {pc = (intptr_t *)*pc;}                                // jump to the address
-        else if (op == JZ)   {pc = ax ? pc + 1 : (intptr_t *)*pc;}                   // jump if ax is zero
-        else if (op == JNZ)  {pc = ax ? (intptr_t *)*pc : pc + 1;}                   // jump if ax is not zero
-        else if (op == CALL) {*--sp = (intptr_t)(pc+1); pc = (intptr_t *)*pc;}           // call subroutine
-            //else if (op == RET)  {pc = (intptr_t *)*sp++;}                              // return from subroutine;
-        else if (op == ENT)  {*--sp = (intptr_t)bp; bp = sp; sp = sp - *pc++;}      // make new stack frame
-        else if (op == ADJ)  {sp = sp + *pc++;}                                // add esp, <size>
-        else if (op == LEV)  {sp = bp; bp = (intptr_t *)*sp++; pc = (intptr_t *)*sp++;}  // restore call frame and PC
-        else if (op == LEA)  {ax = (intptr_t)(bp + *pc++);}                         // load address for arguments.
-
-        else if (op == OR)  ax = *sp++ | ax;
-        else if (op == XOR) ax = *sp++ ^ ax;
-        else if (op == AND) ax = *sp++ & ax;
-        else if (op == EQ)  ax = *sp++ == ax;
-        else if (op == NE)  ax = *sp++ != ax;
-        else if (op == LT)  ax = *sp++ < ax;
-        else if (op == LE)  ax = *sp++ <= ax;
-        else if (op == GT)  ax = *sp++ >  ax;
-        else if (op == GE)  ax = *sp++ >= ax;
-        else if (op == SHL) ax = *sp++ << ax;
-        else if (op == SHR) ax = *sp++ >> ax;
-        else if (op == ADD) ax = *sp++ + ax;
-        else if (op == SUB) ax = *sp++ - ax;
-        else if (op == MUL) ax = *sp++ * ax;
-        else if (op == DIV) ax = *sp++ / ax;
-        else if (op == MOD) ax = *sp++ % ax;
-
-        else if (op == EXIT) {
-            if (*sp == 0){
-                LOG.AddLog("exit(" + std::to_string(*sp) + ")");
+        intptr_t op = *pc++;
+        switch(op) {
+            case IMM:
+                rax = *pc ++;
+                break;
+            case LC:
+                rax = *(char *)rax;
+                break;
+            case LI:
+                rax = *(intptr_t *)rax;
+                break;
+            case SC:
+                rax = *(char *)sp = rax;
+                sp ++;
+                break;
+            case SI:
+                *(intptr_t *)*sp = rax;
+                sp ++;
+                break;
+            case PUSH:
+                *--sp = rax;
+                break;
+            case JMP:
+                pc = (intptr_t *)*pc;
+                break;
+            case JZ:
+                if (rax != 0) {
+                    pc ++;
+                }
+                else {
+                    pc = (intptr_t *)*pc;
+                }
+                break;
+            case JNZ:
+                if (rax != 0) {
+                    pc = (intptr_t *)*pc;
+                }
+                else {
+                    pc ++;
+                }
+                break;
+            case CALL:
+                *--sp = (intptr_t)(pc + 1);
+                pc = (intptr_t *)*pc;
+                break;
+            case ENT:
+                *--sp = (intptr_t)bp;
+                bp = sp;
+                sp = sp - *pc;
+                pc ++;
+                break;
+            case ADJ:
+                sp = sp + *pc;
+                pc ++;
+                break;
+            case LEV:
+                sp = bp;
+                bp = (intptr_t *)*sp;
+                sp ++;
+                pc = (intptr_t *)*sp;
+                sp ++;
+                break;
+            case LEA:
+                rax = (intptr_t)(bp + *pc);
+                pc ++;
+                break;
+#define OPERATOR_BREAK(op) rax = *sp++ op rax;break
+            case OR:
+                OPERATOR_BREAK(|);
+            case XOR:
+                OPERATOR_BREAK(^);
+            case AND:
+                OPERATOR_BREAK(&);
+            case EQ:
+                OPERATOR_BREAK(==);
+            case NE:
+                OPERATOR_BREAK(!=);
+            case LT:
+                OPERATOR_BREAK(<);
+            case LE:
+                OPERATOR_BREAK(<=);
+            case GT:
+                OPERATOR_BREAK(>);
+            case GE:
+                OPERATOR_BREAK(>=);
+            case SHL:
+                OPERATOR_BREAK(<<);
+            case SHR:
+                OPERATOR_BREAK(>>);
+            case ADD:
+                OPERATOR_BREAK(+);
+            case SUB:
+                OPERATOR_BREAK(-);
+            case MUL:
+                OPERATOR_BREAK(*);
+            case DIV:
+                OPERATOR_BREAK(/);
+            case MOD:
+                OPERATOR_BREAK(%);
+#undef OPERATOR
+            case EXIT:
+                if (*sp == 0){
+                    LOG.AddLog("exit(" + std::to_string(*sp) + ")");
+                }
+                else {
+                    LOG.AddErrorLog("exit(" + std::to_string(*sp) + ")");
+                }
+                return *sp;
+                break;
+            case PRTF: {
+                intptr_t *tmp = sp + pc[1];
+                char buf[1024] = {0};
+                rax = sprintf(buf,(char *)tmp[-1], tmp[-2], tmp[-3], tmp[-4], tmp[-5], tmp[-6]);
+                RUNRESULT.Output(std::string(buf));
+                break;
             }
-            else {
-                LOG.AddErrorLog("exit(" + std::to_string(*sp) + ")");
-            }
-            return *sp;
+            case MALC:
+                rax = (intptr_t)malloc(*sp);
+                break;
+            case MSET:
+                rax = (intptr_t)memset((char*)sp[2],sp[1],*sp);
+                break;
+            case MCMP:
+                rax = memcmp((char*)sp[2],(char*)sp[1],*sp);
+                break;
+            default:
 
-
-        }
-//        else if (op == OPEN) { ax = open((char *)sp[1], sp[0]); }
-//        else if (op == CLOS) { ax = close(*sp);}
-//        else if (op == READ) { ax = read(sp[2], (char *)sp[1], *sp); }
-        else if (op == PRTF) {
-            tmp = sp + pc[1];
-            char buf[1024] = {0};
-            ax = sprintf(buf,(char *)tmp[-1], tmp[-2], tmp[-3], tmp[-4], tmp[-5], tmp[-6]);
-            RUNRESULT.Output(std::string(buf));
-        }
-        else if (op == MALC) { ax = (intptr_t)malloc(*sp);}
-        else if (op == MSET) { ax = (intptr_t)memset((char *)sp[2], sp[1], *sp);}
-        else if (op == MCMP) { ax = memcmp((char *)sp[2], (char *)sp[1], *sp);}
-        else {
-            LOG.AddErrorLog("unknown instruction:" + std::to_string(op));
-            return -1;
+//        else if (op == OPEN) { rax = open((char *)sp[1], sp[0]); }
+//        else if (op == CLOS) { rax = close(*sp);}
+//        else if (op == READ) { rax = read(sp[2], (char *)sp[1], *sp); }
+                LOG.AddErrorLog("未知的指令:" + std::to_string(op));
+                return -1;
+                break;
         }
     }
 }

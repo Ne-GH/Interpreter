@@ -62,7 +62,7 @@ private:
 
     char *src, *old_src;  // pointer to source code string;
 
-    intptr_t *pc, *bp, *sp, ax, cycle;
+    intptr_t *pc, *bp, *sp, rax, cycle;
 
     intptr_t *current_id, // current parsed ID
         *symbols,    // symbol table
