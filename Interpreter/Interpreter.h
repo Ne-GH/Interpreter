@@ -41,7 +41,8 @@ private:
         // 内置命令,30-37
         OPEN ,READ ,CLOS ,PRTF ,MALC ,MSET ,MCMP ,EXIT
     };
-// 词法分析器
+
+    // 词法分析器/语法分析，定义的位置隐含了优先级，Assign的优先级最低，Brak的优先级最高
     enum {
         Num = 128 ,Fun ,Sys ,Glo ,Loc ,Id ,
         Char ,Else ,Enum ,If ,Int ,Return ,Sizeof ,While ,
