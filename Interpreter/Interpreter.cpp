@@ -1,5 +1,9 @@
 #include "Interpreter.h"
 #include "../RunWidget/RunWidget.h"
+#define COUTASM(message) \
+    if (_assembly == true) { \
+        RUNRESULT.Output(std::string(message) + "\n"); \
+    }
 
 /*******************************************************************************
  * 词法分析
@@ -255,7 +259,7 @@ void Interpreter::match(intptr_t tk) {
 
 /*******************************************************************************
  * 递归下降 BNF
- * 
+ * 语法分析，递归生成语法树
 *******************************************************************************/
 void Interpreter::expression(intptr_t level) {
     intptr_t *id;
@@ -1165,26 +1169,33 @@ int Interpreter::eval() {
         switch(op) {
             case IMM:
                 rax = *pc ++;
+                COUTASM("mov %pc,rax");
                 break;
             case LC:
                 rax = *(char *)rax;
+                COUTASM("LC rax,rax");
                 break;
             case LI:
                 rax = *(intptr_t *)rax;
+                COUTASM("LI rax,rax");
                 break;
             case SC:
                 rax = *(char *)sp = rax;
                 sp ++;
+                COUTASM("mov rax,sp");
                 break;
             case SI:
                 *(intptr_t *)*sp = rax;
                 sp ++;
+                COUTASM("mov rax,sp");
                 break;
             case PUSH:
                 *--sp = rax;
+                COUTASM("push rax");
                 break;
             case JMP:
                 pc = (intptr_t *)*pc;
+                COUTASM("JMP pc");
                 break;
             case JZ:
                 if (rax != 0) {
@@ -1193,6 +1204,7 @@ int Interpreter::eval() {
                 else {
                     pc = (intptr_t *)*pc;
                 }
+                COUTASM("JZ pc");
                 break;
             case JNZ:
                 if (rax != 0) {
@@ -1201,20 +1213,24 @@ int Interpreter::eval() {
                 else {
                     pc ++;
                 }
+                COUTASM("JNZ pc");
                 break;
             case CALL:
                 *--sp = (intptr_t)(pc + 1);
                 pc = (intptr_t *)*pc;
+                COUTASM("CALL " + std::to_string((intptr_t)pc));
                 break;
             case ENT:
                 *--sp = (intptr_t)bp;
                 bp = sp;
                 sp = sp - *pc;
                 pc ++;
+                COUTASM("ENT");
                 break;
             case ADJ:
                 sp = sp + *pc;
                 pc ++;
+                COUTASM("ADJ");
                 break;
             case LEV:
                 sp = bp;
@@ -1222,44 +1238,62 @@ int Interpreter::eval() {
                 sp ++;
                 pc = (intptr_t *)*sp;
                 sp ++;
+                COUTASM("LEV");
                 break;
             case LEA:
                 rax = (intptr_t)(bp + *pc);
                 pc ++;
+                COUTASM("LEA");
                 break;
 #define OPERATOR_BREAK(op) rax = *sp++ op rax;break
             case OR:
                 OPERATOR_BREAK(|);
+                COUTASM("OR *sp,rax");
             case XOR:
                 OPERATOR_BREAK(^);
+                COUTASM("XOR sp,rax");
             case AND:
                 OPERATOR_BREAK(&);
+                COUTASM("AND sp,rax");
             case EQ:
                 OPERATOR_BREAK(==);
+                COUTASM("EQ sp,rax");
             case NE:
                 OPERATOR_BREAK(!=);
+                COUTASM("NE sp,rax");
             case LT:
                 OPERATOR_BREAK(<);
+                COUTASM("LT sp,rax");
             case LE:
                 OPERATOR_BREAK(<=);
+                COUTASM("LE sp,rax");
             case GT:
                 OPERATOR_BREAK(>);
+                COUTASM("GT sp,rax");
             case GE:
                 OPERATOR_BREAK(>=);
+                COUTASM("GE sp,rax");
             case SHL:
                 OPERATOR_BREAK(<<);
+                COUTASM("SHL sp,rax");
             case SHR:
                 OPERATOR_BREAK(>>);
+                COUTASM("SHR sp,rax");
             case ADD:
                 OPERATOR_BREAK(+);
+                COUTASM("ADD sp,rax");
             case SUB:
                 OPERATOR_BREAK(-);
+                COUTASM("SUB sp,rax");
             case MUL:
                 OPERATOR_BREAK(*);
+                COUTASM("MUL sp,rax");
             case DIV:
                 OPERATOR_BREAK(/);
+                COUTASM("DIV sp,rax");
             case MOD:
                 OPERATOR_BREAK(%);
+                COUTASM("MOD sp,rax");
 #undef OPERATOR
             case EXIT:
                 if (*sp == 0){
@@ -1274,7 +1308,9 @@ int Interpreter::eval() {
                 intptr_t *tmp = sp + pc[1];
                 char buf[1024] = {0};
                 rax = sprintf(buf,(char *)tmp[-1], tmp[-2], tmp[-3], tmp[-4], tmp[-5], tmp[-6]);
-                RUNRESULT.Output(std::string(buf));
+
+                if (!_assembly)
+                    RUNRESULT.Output(std::string(buf));
                 break;
             }
             case MALC:

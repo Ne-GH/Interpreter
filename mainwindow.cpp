@@ -35,6 +35,14 @@ MainWindow::MainWindow(QWidget* parent)
     connect(ui->run_action, &QAction::triggered, [=] {
         RunWidget::GetInstance().show();
         RunWidget::GetInstance().Clear();
+        _interpreter->SetMod(Interpreter::RUN);
+        _interpreter->Run(_file.GetContent());
+
+    });
+    connect(ui->asm_action,&QAction::triggered,[=] {
+        RunWidget::GetInstance().show();
+        RunWidget::GetInstance().Clear();
+        _interpreter->SetMod(Interpreter::ASM);
         _interpreter->Run(_file.GetContent());
     });
     connect(ui->log_action, &QAction::triggered, [=] {

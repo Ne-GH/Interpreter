@@ -11,8 +11,19 @@ public:
 	~Interpreter();
 	
 	int Run(std::string &file_content);
-
+    enum {
+        ASM,RUN
+    };
+    void SetMod(bool mod) {
+        if (mod == ASM) {
+            _assembly = true;
+        }
+        else {
+            _assembly = false;
+        }
+    }
 private:
+    bool _assembly = false;
     int _pool_size = 1024*256;
     int token; // current token
 // 指令集
@@ -89,6 +100,8 @@ private:
     void global_declaration();
     void program();
     int eval();
+
+
 
 };
 

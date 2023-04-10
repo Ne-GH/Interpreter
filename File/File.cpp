@@ -25,7 +25,7 @@ auto File::Create() -> Path {
 		"创建文件",
 		".", 
 		"C语言文件(*.c);;All Files (*)").toStdString();
-	
+
 #if defined(_WIN32) || defined(_WIN64)
 	StringPathToWStringPath(_path);
 #endif
