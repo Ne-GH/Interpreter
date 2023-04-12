@@ -69,8 +69,8 @@ void File::Save(std::string_view updata_text) {
 		_path = Create();
 	}
 	std::fstream file_system(_path);
-	
-	file_system << updata_text;
+
+    _content = updata_text;
 
 }
 
