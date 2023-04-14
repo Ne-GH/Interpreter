@@ -44,7 +44,7 @@ void Interpreter::next() {
             return;
         }
         // 数字字面量
-        else if (std::isdigit(token) == true) {
+        else if (std::isdigit(token) != false) {
             token_val = token - '0';
             // 十进制
             if (token_val > 0) {
