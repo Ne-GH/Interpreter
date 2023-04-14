@@ -1363,14 +1363,15 @@ int Interpreter::Run(std::string& file_content) {
     }
 
     next(); current_id->Token = Char; // handle void type
-    next(); idmain = current_id; // keep track of main
+    next(); 
+    Symbol &main_id = *current_id; // keep track of main
 
 
     src = &file_content[0];
 
     program();
 
-    if (!(pc = (intptr_t *)(idmain->Value))) {
+    if (!(pc = (intptr_t *)(main_id.Value))) {
         LOG.AddErrorLog("main() not defined\n");
         return -1;
     }

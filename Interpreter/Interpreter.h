@@ -78,7 +78,7 @@ private:
 
     intptr_t *pc, *bp, *sp, rax, cycle;
 
-    Symbol *idmain,*current_id;
+    Symbol *current_id;
     Symbol* symbols;
     // std::vector<Symbols> symbols;
 
