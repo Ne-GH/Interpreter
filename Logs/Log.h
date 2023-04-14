@@ -4,6 +4,7 @@
 #include <QDialog>
 #include <string>
 #include <memory>
+#include <fstream>
 
 
 namespace Ui {
@@ -18,6 +19,7 @@ class Log : public QDialog {
     explicit Log(QWidget *parent = nullptr);
     Log(const Log&) = default;
     Log& operator = (const Log&) = default;
+    std::fstream _flog;
 private slots:
     void resizeEvent(QResizeEvent *event);
 public:

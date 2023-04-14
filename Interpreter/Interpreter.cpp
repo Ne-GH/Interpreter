@@ -1,9 +1,11 @@
 #include "Interpreter.h"
 #include "../RunWidget/RunWidget.h"
+#include <fstream>
 #define COUTASM(message) \
     if (_assembly == true) { \
         RUNRESULT.Output(std::string(message) + "\n"); \
     }
+
 
 /*******************************************************************************
  * 词法分析
@@ -14,6 +16,7 @@ void Interpreter::next() {
     intptr_t hash = 0;
 
     while (token = *src) {
+        LOG.AddLog("next" + std::to_string(token));
         src++;
 
         // 变量
@@ -266,6 +269,7 @@ void Interpreter::expression(intptr_t level) {
         LOG.AddErrorLog(std::to_string(line) + ":遇到EOF,意外结束");
         exit(-1);
     }
+    LOG.AddLog("expression" + std::to_string(token) + "level" + std::to_string(level));
     switch (token) {
         case Num: {
             match(Num);
@@ -818,7 +822,7 @@ void Interpreter::statement() {
     // 6. expression; (expression end with semicolon)
 
     intptr_t *a = nullptr, *b = nullptr;
-
+    LOG.AddLog("statement" + std::to_string(token));
     if (token == If) {
         // if (...) <statement> [else <statement>]
         //
@@ -1153,7 +1157,7 @@ void Interpreter::program() {
 *******************************************************************************/
 int Interpreter::eval() {
     cycle = 0;
-    while (1) {
+    while (true) {
         cycle ++;
         intptr_t op = *pc++;
         switch(op) {

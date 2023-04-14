@@ -16,6 +16,7 @@ Log::Log(QWidget *parent) :
     ui->setupUi(this);
     setWindowTitle("日志");
     ui->log_edit->setReadOnly(true);
+    _flog.open("./log.txt",std::ios::in | std::ios::out | std::ios::trunc);
 }
 
 Log::~Log() {
@@ -35,9 +36,11 @@ static string GetData(){
 }
 
 void Log::AddLog(string message,string log_type) {
-    string log = GetData() + log_type + " : " + message + "\n";
-    logs += log;
-    ui->log_edit->setText(logs.c_str());
+    string log = GetData() + log_type + " : " + message;
+    ui->log_edit->append(log.c_str());
+
+    _flog << log + "\n";
+    _flog.flush();
 }
 
 
