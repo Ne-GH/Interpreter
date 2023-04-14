@@ -29,16 +29,15 @@ enum {
 
 // 符号表
 struct Symbol {
-    intptr_t Token;
-    intptr_t Hash;
-    std::string Name;   // 标识符本身的字符串
-    intptr_t Type;   // 标识符类型，CHAR/INT/PTR
-    intptr_t Class;  // 标识符类型，局部/全局变量
-    intptr_t Value;  // 标识符的值
-    intptr_t BType;
-    intptr_t BClass;
-    intptr_t BValue;
-    intptr_t IdSize;
+    intptr_t _token = 0;
+    intptr_t _hash = 0;
+    std::string _name = "";   // 标识符本身的字符串
+    intptr_t _type = 0;   // 标识符类型，CHAR/INT/PTR
+    intptr_t _class = 0;  // 标识符类型，局部/全局变量
+    intptr_t _value = 0;  // 标识符的值
+    intptr_t _backup_type = 0;
+    intptr_t _backup_class = 0;
+    intptr_t _backup_value = 0;
 };
 
 
@@ -79,8 +78,7 @@ private:
     intptr_t *pc, *bp, *sp, rax, cycle;
 
     Symbol *current_id;
-    Symbol* symbols;
-    // std::vector<Symbols> symbols;
+    std::vector<Symbol> symbols;
 
     intptr_t line,        // line number of source code
         token_val;   // value of current token (mainly for number)

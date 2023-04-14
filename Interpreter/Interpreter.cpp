@@ -28,20 +28,32 @@ void Interpreter::next() {
                 src++;
             }
 
-            current_id = symbols;
-            while (current_id->Token) {
-                // 该标记在符号表中不存在，即hash和name均相同
-                if (current_id->Hash == hash && current_id->Name == std::string(last_pos,(int)(src-last_pos))) {
-                    token = current_id->Token;
+            for (auto& tmp : symbols) {
+                current_id = &tmp;
+                if (tmp._hash == hash && tmp._name == std::string(last_pos, (int)(src - last_pos))) {
+                    token = tmp._token;
                     return;
                 }
-                current_id++;
-                //current_id = current_id + IdSize;
             }
-
-            current_id->Name = std::string(last_pos,(int)(src-last_pos));
-            current_id->Hash = hash;
-            token = current_id->Token = Id;
+            //current_id = symbols;
+            //while (current_id->_token) {
+            //    // 该标记在符号表中不存在，即hash和name均相同
+            //    if (current_id->_hash == hash && current_id->_name == std::string(last_pos,(int)(src-last_pos))) {
+            //        token = current_id->_token;
+            //        return;
+            //    }
+            //    current_id++;
+            //    //current_id = current_id + IdSize;
+            //}
+            Symbol tmp;
+            tmp._name = std::string(last_pos, (int)(src - last_pos));
+            tmp._hash = hash;
+            token = tmp._token = Id;
+            symbols.push_back(tmp);
+            current_id = &symbols.back();
+            // current_id->_name = std::string(last_pos,(int)(src-last_pos));
+            // current_id->_hash = hash;
+            //token = current_id->_token = Id;
             return;
         }
         // 数字字面量
@@ -346,13 +358,13 @@ void Interpreter::expression(intptr_t level) {
                 match(')');
 
                 // 系统调用,直接给出系统函数地址，无需call
-                if (id->Class == Sys) {
-                    *++text = id->Value;
+                if (id->_class == Sys) {
+                    *++text = id->_value;
                 }
                     // 函数调用
-                else if (id->Class == Fun) {
+                else if (id->_class == Fun) {
                     *++text = CALL;
-                    *++text = id->Value;
+                    *++text = id->_value;
                 }
                 else {
                     LOG.AddErrorLog(std::to_string(line) + "错误的函数调用");
@@ -364,32 +376,32 @@ void Interpreter::expression(intptr_t level) {
                     *++text = ADJ;
                     *++text = arg_num;
                 }
-                expr_type = id->Type;
+                expr_type = id->_type;
             }
                 // 枚举
-            else if (id->Class == Num) {
+            else if (id->_class == Num) {
                 *++text = IMM;
-                *++text = id->Value;
+                *++text = id->_value;
                 expr_type = INT;
             }
                 // 变量
             else {
                 // 局部变量
-                if (id->Class == Loc) {
+                if (id->_class == Loc) {
                     *++text = LEA;
-                    *++text = index_of_bp - id->Value;
+                    *++text = index_of_bp - id->_value;
                 }
                     // 全局变量
-                else if (id->Class == Glo) {
+                else if (id->_class == Glo) {
                     *++text = IMM;
-                    *++text = id->Value;
+                    *++text = id->_value;
                 }
                 else {
                     LOG.AddErrorLog(std::to_string(line) + "未定义的变量");
                     exit(-1);
                 }
 
-                expr_type = id->Type;
+                expr_type = id->_type;
                 *++text = (expr_type == CHAR) ? LC : LI;
             }
             break;
@@ -938,9 +950,9 @@ void Interpreter::enum_declaration() {
             next();
         }
 
-        current_id->Class = Num;
-        current_id->Type = INT;
-        current_id->Value = enum_val++;
+        current_id->_class = Num;
+        current_id->_type = INT;
+        current_id->_value = enum_val++;
 
         if (token == ',') {
             next();
@@ -974,16 +986,16 @@ void Interpreter::function_parameter() {
             LOG.AddErrorLog(std::to_string(line) + ":错误的参数声明");
             exit(-1);
         }
-        if (current_id->Class == Loc) {
+        if (current_id->_class == Loc) {
             LOG.AddErrorLog(std::to_string(line) + ":重复的参数声明");
             exit(-1);
         }
 
         match(Id);
         // 局部覆盖全局
-        current_id->BClass = current_id->Class; current_id->Class  = Loc;
-        current_id->BType  = current_id->Type;  current_id->Type   = type;
-        current_id->BValue = current_id->Value; current_id->Value  = params++;
+        current_id->_backup_class = current_id->_class; current_id->_class  = Loc;
+        current_id->_backup_type  = current_id->_type;  current_id->_type   = type;
+        current_id->_backup_value = current_id->_value; current_id->_value  = params++;
 
         if (token == ',') {
             match(',');
@@ -1016,16 +1028,16 @@ void Interpreter::function_body() {
                 LOG.AddErrorLog(std::to_string(line) + ":错误的本地变量声明");
                 exit(-1);
             }
-            if (current_id->Class == Loc) {
+            if (current_id->_class == Loc) {
                 LOG.AddErrorLog(std::to_string(line) + "本地变量重复声明");
                 exit(-1);
             }
             match(Id);
 
             // 保存本地变量
-            current_id->BClass = current_id->Class; current_id->Class  = Loc;
-            current_id->BType  = current_id->Type;  current_id->Type   = type;
-            current_id->BValue = current_id->Value; current_id->Value  = ++pos_local;
+            current_id->_backup_class = current_id->_class; current_id->_class  = Loc;
+            current_id->_backup_type  = current_id->_type;  current_id->_type   = type;
+            current_id->_backup_value = current_id->_value; current_id->_value  = ++pos_local;
 
             if (token == ',') {
                 match(',');
@@ -1058,16 +1070,25 @@ void Interpreter::function_declaration() {
     //match('}');
 
     // unwind local variable declarations for all local variables.
-    current_id = symbols;
-    while (current_id->Token) {
-        if (current_id->Class == Loc) {
-            current_id->Class = current_id->BClass;
-            current_id->Type  = current_id->BType;
-            current_id->Value = current_id->BValue;
+    for (auto& up : symbols) {
+        current_id = &up;
+        if (up._class == Loc) {
+            up._class = up._backup_class;
+            up._type = up._backup_type;
+            up._value = up._backup_value;
         }
-        current_id++;
-        //current_id = current_id + IdSize;
     }
+
+    //current_id = symbols;
+    //while (current_id->_token) {
+    //    if (current_id->_class == Loc) {
+    //        current_id->_class = current_id->_backup_class;
+    //        current_id->_type  = current_id->_backup_type;
+    //        current_id->_value = current_id->_backup_value;
+    //    }
+    //    current_id++;
+    //    //current_id = current_id + IdSize;
+    //}
 }
 
 /*******************************************************************************
@@ -1117,23 +1138,23 @@ void Interpreter::global_declaration() {
             LOG.AddErrorLog(std::to_string(line) + ":错误的全局声明");
             exit(-1);
         }
-        if (current_id->Class) {
+        if (current_id->_class) {
             LOG.AddErrorLog(std::to_string(line) + ":重复的全局声明");
             exit(-1);
         }
         match(Id);
-        current_id->Type = type;
+        current_id->_type = type;
 
         // 如果是函数
         if (token == '(') {
-            current_id->Class = Fun;
-            current_id->Value = (intptr_t)(text + 1);
+            current_id->_class = Fun;
+            current_id->_value = (intptr_t)(text + 1);
             function_declaration();
         }
         // 变量类型
         else {
-            current_id->Class = Glo;
-            current_id->Value = (intptr_t)data;
+            current_id->_class = Glo;
+            current_id->_value = (intptr_t)data;
             data = data + sizeof(intptr_t);
         }
         if (token == ',') {
@@ -1336,7 +1357,6 @@ int Interpreter::Run(std::string& file_content) {
     memset(text, 0, _pool_size);
     memset(data, 0, _pool_size);
     memset(stack, 0, _pool_size);
-    memset(symbols, 0, _pool_size);
 
 
 #ifdef _MSC_VER
@@ -1351,28 +1371,34 @@ int Interpreter::Run(std::string& file_content) {
     // 添加关键字到符号表
     for(int i = Char;i <= While;) {
         next();
-        current_id->Token = i++;
+        current_id->_token = i++;
     }
 
     // add library to symbol table
     for(int i = OPEN;i <= EXIT;) {
         next();
-        current_id->Class = Sys;
-        current_id->Type = INT;
-        current_id->Value = i++;
+        current_id->_class = Sys;
+        current_id->_type = INT;
+        current_id->_value = i++;
     }
 
-    next(); current_id->Token = Char; // handle void type
     next(); 
-    Symbol &main_id = *current_id; // keep track of main
+    current_id->_token = Char;
+    next(); 
 
 
     src = &file_content[0];
 
     program();
 
-    if (!(pc = (intptr_t *)(main_id.Value))) {
-        LOG.AddErrorLog("main() not defined\n");
+    Symbol main_id;
+    for (const auto& tmp : symbols) {
+        if (tmp._name == "main") {
+            main_id = tmp;
+        }
+    }
+    if (!(pc = (intptr_t *)(main_id._value))) {
+        LOG.AddErrorLog("main 函数未定义\n");
         return -1;
     }
 
@@ -1392,9 +1418,8 @@ Interpreter::Interpreter() {
     delete_data = data = (char *)new char[_pool_size];
     delete_stack = stack = (intptr_t *)new char[_pool_size];
     delete_src = src = old_src = (char *)new char[_pool_size];
-    symbols = (Symbol *)new char[_pool_size];
     if (text == nullptr || data == nullptr
-        || stack == nullptr || symbols == nullptr
+        || stack == nullptr
         || src == nullptr || old_src == nullptr) {
         LOG.AddErrorLog("为虚拟机分配内存失败");
     }
@@ -1404,10 +1429,8 @@ Interpreter::~Interpreter() {
     delete delete_data;
     delete delete_stack;
     delete delete_src;
-    delete symbols;
     text = nullptr;
     data = nullptr;
     stack = nullptr;
-    symbols = nullptr;
     src = old_src = nullptr;
 }
