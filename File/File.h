@@ -21,7 +21,7 @@ public:
 	void Open();
 	void Read();
 	void Read(Path file_path);
-	void Save(std::string_view uptada_text);
+	void Save(std::string_view updata_text);
 	void Close();
 
 	std::string& GetContent();

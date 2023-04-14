@@ -9,234 +9,234 @@
 
 /*******************************************************************************
  * 词法分析
- * 每次处理一个标记token
+ * 每次处理一个标记_token
 *******************************************************************************/
-void Interpreter::next() {
+void Interpreter::Next() {
     char *last_pos;
     intptr_t hash = 0;
 
-    while (token = *src) {
-        LOG.AddLog("next" + std::to_string(token));
-        src++;
+    while (_token = *_src) {
+        LOG.AddLog("Next" + std::to_string(_token));
+        _src++;
 
         // 变量
-        if (std::isalpha(token) || (token == '_')) {
-            last_pos = src - 1;
-            hash = token;
-            while (std::isalnum(*src) || (*src == '_')) {
-                hash = hash * 147 + *src;
-                src++;
+        if (std::isalpha(_token) || (_token == '_')) {
+            last_pos = _src - 1;
+            hash = _token;
+            while (std::isalnum(*_src) || (*_src == '_')) {
+                hash = hash * 147 + *_src;
+                _src++;
             }
 
             for (auto& tmp : symbols) {
                 current_id = &tmp;
-                if (tmp._hash == hash && tmp._name == std::string(last_pos, (int)(src - last_pos))) {
-                    token = tmp._token;
+                if (tmp._hash == hash && tmp._name == std::string(last_pos, (int)(_src - last_pos))) {
+                    _token = tmp._token;
                     return;
                 }
             }
             //current_id = symbols;
             //while (current_id->_token) {
             //    // 该标记在符号表中不存在，即hash和name均相同
-            //    if (current_id->_hash == hash && current_id->_name == std::string(last_pos,(int)(src-last_pos))) {
-            //        token = current_id->_token;
+            //    if (current_id->_hash == hash && current_id->_name == std::string(last_pos,(int)(_src-last_pos))) {
+            //        _token = current_id->_token;
             //        return;
             //    }
             //    current_id++;
             //    //current_id = current_id + IdSize;
             //}
             Symbol tmp;
-            tmp._name = std::string(last_pos, (int)(src - last_pos));
+            tmp._name = std::string(last_pos, (int)(_src - last_pos));
             tmp._hash = hash;
-            token = tmp._token = Id;
+            _token = tmp._token = Id;
             symbols.push_back(tmp);
             current_id = &symbols.back();
-            // current_id->_name = std::string(last_pos,(int)(src-last_pos));
+            // current_id->_name = std::string(last_pos,(int)(_src-last_pos));
             // current_id->_hash = hash;
-            //token = current_id->_token = Id;
+            //_token = current_id->_token = Id;
             return;
         }
         // 数字字面量
-        else if (std::isdigit(token) != false) {
-            token_val = token - '0';
+        else if (std::isdigit(_token) != false) {
+            token_val = _token - '0';
             // 十进制
             if (token_val > 0) {
-                while (std::isdigit(*src)) {
-                    token_val = token_val*10 + *src++ - '0';
+                while (std::isdigit(*_src)) {
+                    token_val = token_val*10 + *_src++ - '0';
                 }
             }
             else {
                 // 16进制
-                if (*src == 'x' || *src == 'X') {
-                    token = *++src;
-                    while (std::isdigit(token) || (token >= 'a' && token <= 'f') || (token >= 'A' && token <= 'F')) {
-                        // 取token的低4位，后根据是大写还是小写进行+9 或 +0的修正
-                        token_val = token_val * 16 + (token & 15) + (token >= 'A' ? 9 : 0);
-                        token = *++src;
+                if (*_src == 'x' || *_src == 'X') {
+                    _token = *++_src;
+                    while (std::isdigit(_token) || (_token >= 'a' && _token <= 'f') || (_token >= 'A' && _token <= 'F')) {
+                        // 取_token的低4位，后根据是大写还是小写进行+9 或 +0的修正
+                        token_val = token_val * 16 + (_token & 15) + (_token >= 'A' ? 9 : 0);
+                        _token = *++_src;
                     }
                 }
                 // 8进制
                 else {
-                    while (*src >= '0' && *src <= '7') {
-                        token_val = token_val*8 + *src++ - '0';
+                    while (*_src >= '0' && *_src <= '7') {
+                        token_val = token_val*8 + *_src++ - '0';
                     }
                 }
             }
-            token = Num;
+            _token = Num;
             return;
         }
-        else switch (token) {
+        else switch (_token) {
             case '\n':
-                ++line;
+                ++_line;
                 break;
             case '#':
-                while (*src != 0 && *src != '\n') {
-                    src ++;
+                while (*_src != 0 && *_src != '\n') {
+                    _src ++;
                 }
                 break;
             case '/':   // //
-                if (*src == '/') {
-                    while (*src != 0 && *src != '\n') {
-                        ++src;
+                if (*_src == '/') {
+                    while (*_src != 0 && *_src != '\n') {
+                        ++_src;
                     }
                 }
                 else {  // /
-                    token = Div;
+                    _token = Div;
                     return;
                 }
                 break;
             case '"':
             case '\'':
-                last_pos = data;
+                last_pos = _data;
                 // 字符串是否结束
-                while (*src != 0 && *src != token) {
+                while (*_src != 0 && *_src != _token) {
                     // 如果是单个字符，仅会保留最后一个字符
-                    token_val = *src++;
+                    token_val = *_src++;
                     // 支持转义'\n'
                     if (token_val == '\\') {
-                        token_val = *src++;
+                        token_val = *_src++;
                         if (token_val == 'n') {
                             token_val = '\n';
                         }
                     }
-                    // 如果是字符串，则存储在data中
-                    if (token == '"') {
-                        *data++ = token_val;
+                    // 如果是字符串，则存储在_data中
+                    if (_token == '"') {
+                        *_data++ = token_val;
                     }
                 }
-                src++;
-                if (token == '"') {
+                _src++;
+                if (_token == '"') {
                     token_val = (intptr_t)last_pos;
                 }
                 // 单个字符被认为是数字
                 else {
-                    token = Num;
+                    _token = Num;
                 }
                 return;
                 break;
             case '=':
-                if (*src == '=') {  // ==
-                    src ++;
-                    token = Eq;
+                if (*_src == '=') {  // ==
+                    _src ++;
+                    _token = Eq;
                 }
                 else {              // =
-                    token = Assign;
+                    _token = Assign;
                 }
                 return;
                 break;
             case '+':
-                if (*src == '+') {  // ++
-                    src ++;
-                    token = Inc;
+                if (*_src == '+') {  // ++
+                    _src ++;
+                    _token = Inc;
                 }
                 else {              // +
-                    token = Add;
+                    _token = Add;
                 }
                 return;
                 break;
             case '-':
-                if (*src == '-') {  // --
-                    src ++;
-                    token = Dec;
+                if (*_src == '-') {  // --
+                    _src ++;
+                    _token = Dec;
                 }
                 else {              // -
-                    token = Sub;
+                    _token = Sub;
                 }
                 return;
                 break;
             case '!':
-                if (*src == '=') {  // !=
-                    src++;
-                    token = Ne;
+                if (*_src == '=') {  // !=
+                    _src++;
+                    _token = Ne;
                 }
                 return;
                 break;
             case '<':
-                if (*src == '=') {      // <=
-                    src ++;
-                    token = Le;
+                if (*_src == '=') {      // <=
+                    _src ++;
+                    _token = Le;
                 }
-                else if (*src == '<') { // <<
-                    src ++;
-                    token = Shl;
+                else if (*_src == '<') { // <<
+                    _src ++;
+                    _token = Shl;
                 }
                 else {                  // <
-                    token = Lt;
+                    _token = Lt;
                 }
                 return;
                 break;
             case '>':
-                if (*src == '=') {      // >=
-                    src ++;
-                    token = Ge;
+                if (*_src == '=') {      // >=
+                    _src ++;
+                    _token = Ge;
                 }
-                else if (*src == '>') { // >>
-                    src ++;
-                    token = Shr;
+                else if (*_src == '>') { // >>
+                    _src ++;
+                    _token = Shr;
                 }
                 else {                  // >
-                    token = Gt;
+                    _token = Gt;
                 }
                 return;
                 break;
             case '|':
-                if (*src == '|') {      // ||
-                    src ++;
-                    token = Lor;
+                if (*_src == '|') {      // ||
+                    _src ++;
+                    _token = Lor;
                 }
                 else {                  // |
-                    token = Or;
+                    _token = Or;
                 }
                 return;
                 break;
             case '&':
-                if (*src == '&') {      // &&
-                    src ++;
-                    token = Lan;
+                if (*_src == '&') {      // &&
+                    _src ++;
+                    _token = Lan;
                 }
                 else {                  // &
-                    token = And;
+                    _token = And;
                 }
                 return;
                 break;
             case '^':
-                token = Xor;
+                _token = Xor;
                 return;
                 break;
             case '%':
-                token = Mod;
+                _token = Mod;
                 return;
                 break;
             case '*':
-                token = Mul;
+                _token = Mul;
                 return;
                 break;
             case '[':
-                token = Brak;
+                _token = Brak;
                 return;
                 break;
             case '?':
-                token = Cond;
+                _token = Cond;
                 return;
                 break;
             case '~':
@@ -248,26 +248,26 @@ void Interpreter::next() {
             case ']':
             case ',':
             case ':':
-                // 无需进一步处理，直接将字符本身作为token返回
+                // 无需进一步处理，直接将字符本身作为_token返回
                 return;
                 break;
         }
     }
 }
 /*******************************************************************************
- * 查看当前token是否是我们的期望
- * 如果与期望的token一致则获取下一个token
+ * 查看当前_token是否是我们的期望
+ * 如果与期望的_token一致则获取下一个_token
  * 否则exit -1
 *******************************************************************************/
-void Interpreter::match(intptr_t tk) {
-    if (token == tk) {
-        next();
+void Interpreter::Match(int token) {
+    if (_token == token) {
+        Next();
     }
     else {
         LOG.AddErrorLog(
-                "在第" + std::to_string(line) + "行,"
-                + "期望的token为:" + std::to_string(tk)
-                + "实际的token为:" + std::to_string(token));
+                "在第" + std::to_string(_line) + "行,"
+                + "期望的_token为:" + std::to_string(token)
+                + "实际的_token为:" + std::to_string(_token));
         exit(-1);
     }
 }
@@ -277,543 +277,543 @@ void Interpreter::match(intptr_t tk) {
  * 语法分析,解析表达式，递归生成语法树
  * 参数level为当前运算符的优先级
 *******************************************************************************/
-void Interpreter::expression(intptr_t level) {
-    if (!token) {
-        LOG.AddErrorLog(std::to_string(line) + ":遇到EOF,意外结束");
+void Interpreter::Expression(int level) {
+    if (!_token) {
+        LOG.AddErrorLog(std::to_string(_line) + ":遇到EOF,意外结束");
         exit(-1);
     }
-    LOG.AddLog("expression" + std::to_string(token) + "level" + std::to_string(level));
-    switch (token) {
+    LOG.AddLog("Expression" + std::to_string(_token) + "level" + std::to_string(level));
+    switch (_token) {
         case Num: {
-            match(Num);
+            Match(Num);
 
-            *++text = IMM;
-            *++text = token_val;
-            expr_type = INT;
+            *++_text = IMM;
+            *++_text = token_val;
+            _expr_type = INT;
             break;
 
         }
         case '"': {
-            *++text = IMM;
-            *++text = token_val;
+            *++_text = IMM;
+            *++_text = token_val;
 
             // 多行字符串支持
-            match('"');
-            while (token == '"') {
-                match('"');
+            Match('"');
+            while (_token == '"') {
+                Match('"');
             }
 
             // 内存对齐，并添加NUL
-            data = (char *)(((intptr_t)data + sizeof(intptr_t)) & (-sizeof(intptr_t)));
-            expr_type = PTR;        // 字符串表达式的结果是指针
+            _data = (char *)(((intptr_t)_data + sizeof(intptr_t)) & (-sizeof(intptr_t)));
+            _expr_type = PTR;        // 字符串表达式的结果是指针
             break;
 
         }
         case Sizeof: {
 
-            match(Sizeof);
-            match('(');
-            expr_type = INT;
+            Match(Sizeof);
+            Match('(');
+            _expr_type = INT;
 
-            if (token == Int) {
-                match(Int);
+            if (_token == Int) {
+                Match(Int);
             }
-            else if (token == Char) {
-                match(Char);
-                expr_type = CHAR;
+            else if (_token == Char) {
+                Match(Char);
+                _expr_type = CHAR;
             }
             // 多重指针
-            while (token == Mul) {
-                match(Mul);
-                expr_type = expr_type + PTR;
+            while (_token == Mul) {
+                Match(Mul);
+                _expr_type = _expr_type + PTR;
             }
 
-            match(')');
+            Match(')');
 
-            *++text = IMM;
-            *++text = (expr_type == CHAR) ? sizeof(char) : sizeof(intptr_t);
+            *++_text = IMM;
+            *++_text = (_expr_type == CHAR) ? sizeof(char) : sizeof(intptr_t);
 
-            expr_type = INT;            // sizeof表达式的结果是int
+            _expr_type = INT;            // sizeof表达式的结果是int
             break;
         }
         case Id: {
-            match(Id);
+            Match(Id);
             auto id = current_id;
 
             // 函数调用
-            if (token == '(') {
-                match('(');
+            if (_token == '(') {
+                Match('(');
 
                 intptr_t arg_num = 0;
-                while (token != ')') {
-                    expression(Assign);
-                    *++text = PUSH;
+                while (_token != ')') {
+                    Expression(Assign);
+                    *++_text = PUSH;
                     arg_num ++;
 
-                    if (token == ',') {
-                        match(',');
+                    if (_token == ',') {
+                        Match(',');
                     }
 
                 }
-                match(')');
+                Match(')');
 
                 // 系统调用,直接给出系统函数地址，无需call
                 if (id->_class == Sys) {
-                    *++text = id->_value;
+                    *++_text = id->_value;
                 }
                     // 函数调用
                 else if (id->_class == Fun) {
-                    *++text = CALL;
-                    *++text = id->_value;
+                    *++_text = CALL;
+                    *++_text = id->_value;
                 }
                 else {
-                    LOG.AddErrorLog(std::to_string(line) + "错误的函数调用");
+                    LOG.AddErrorLog(std::to_string(_line) + "错误的函数调用");
                     exit(-1);
                 }
 
                 // 清除栈中的参数
                 if (arg_num > 0) {
-                    *++text = ADJ;
-                    *++text = arg_num;
+                    *++_text = ADJ;
+                    *++_text = arg_num;
                 }
-                expr_type = id->_type;
+                _expr_type = id->_type;
             }
                 // 枚举
             else if (id->_class == Num) {
-                *++text = IMM;
-                *++text = id->_value;
-                expr_type = INT;
+                *++_text = IMM;
+                *++_text = id->_value;
+                _expr_type = INT;
             }
                 // 变量
             else {
                 // 局部变量
                 if (id->_class == Loc) {
-                    *++text = LEA;
-                    *++text = index_of_bp - id->_value;
+                    *++_text = LEA;
+                    *++_text = _index_of_bp - id->_value;
                 }
                     // 全局变量
                 else if (id->_class == Glo) {
-                    *++text = IMM;
-                    *++text = id->_value;
+                    *++_text = IMM;
+                    *++_text = id->_value;
                 }
                 else {
-                    LOG.AddErrorLog(std::to_string(line) + "未定义的变量");
+                    LOG.AddErrorLog(std::to_string(_line) + "未定义的变量");
                     exit(-1);
                 }
 
-                expr_type = id->_type;
-                *++text = (expr_type == CHAR) ? LC : LI;
+                _expr_type = id->_type;
+                *++_text = (_expr_type == CHAR) ? LC : LI;
             }
             break;
 
         }
         case '(': { // 类型转换
-            match('(');
-            if (token == Int || token == Char) {
-                int tmp_type = (token == Char) ? CHAR : INT; // 类型转换
-                match(token);
-                while (token == Mul) {
-                    match(Mul);
+            Match('(');
+            if (_token == Int || _token == Char) {
+                int tmp_type = (_token == Char) ? CHAR : INT; // 类型转换
+                Match(_token);
+                while (_token == Mul) {
+                    Match(Mul);
                     tmp_type = tmp_type + PTR;
                 }
 
-                match(')');
+                Match(')');
 
-                expression(Inc); // 处理优先级
+                Expression(Inc); // 处理优先级
 
-                expr_type  = tmp_type;
+                _expr_type  = tmp_type;
             }
             // 如果不是类型转换就按普通的表达式处理
             else {
-                expression(Assign);
-                match(')');
+                Expression(Assign);
+                Match(')');
             }
             break;
         }
         case Mul: {
-            match(Mul);
-            expression(Inc); // 处理优先级
+            Match(Mul);
+            Expression(Inc); // 处理优先级
             // 是指针的解引用
-            if (expr_type >= PTR) {
-                expr_type = expr_type - PTR;
+            if (_expr_type >= PTR) {
+                _expr_type = _expr_type - PTR;
             }
             else {
-                LOG.AddErrorLog(std::to_string(line) + "错误的解引用");
+                LOG.AddErrorLog(std::to_string(_line) + "错误的解引用");
                 exit(-1);
             }
 
-            *++text = (expr_type == CHAR) ? LC : LI;
+            *++_text = (_expr_type == CHAR) ? LC : LI;
             break;
         }
         case And: {
             // 取地址
-            match(And);
-            expression(Inc);
+            Match(And);
+            Expression(Inc);
             // 避免递归解析时产生的指令影响指令运行
-            if (*text == LC || *text == LI) {
-                text --;
+            if (*_text == LC || *_text == LI) {
+                _text --;
             }
             else {
-                LOG.AddErrorLog(std::to_string(line) + "错误的取地址");
+                LOG.AddErrorLog(std::to_string(_line) + "错误的取地址");
                 exit(-1);
             }
 
-            expr_type = expr_type + PTR;
+            _expr_type = _expr_type + PTR;
             break;
         }
         case '!': {
-            match('!');
-            expression(Inc);
+            Match('!');
+            Expression(Inc);
 
-            *++text = PUSH;
-            *++text = IMM;
-            *++text = 0;
-            *++text = EQ;
+            *++_text = PUSH;
+            *++_text = IMM;
+            *++_text = 0;
+            *++_text = EQ;
 
-            expr_type = INT;
+            _expr_type = INT;
             break;
         }
         case '~': {
             // num ^ 0xfff
-            match('~');
-            expression(Inc);
-            *++text = PUSH;
-            *++text = IMM;
-            *++text = -1;
-            *++text = XOR;
+            Match('~');
+            Expression(Inc);
+            *++_text = PUSH;
+            *++_text = IMM;
+            *++_text = -1;
+            *++_text = XOR;
 
-            expr_type = INT;
+            _expr_type = INT;
             break;
         }
         case Add: {
             // 正
-            match(Add);
-            expression(Inc);
+            Match(Add);
+            Expression(Inc);
 
-            expr_type = INT;
+            _expr_type = INT;
             break;
         }
         case Sub: {
             // 负
-            match(Sub);
+            Match(Sub);
             // 数字直接取负
-            if (token == Num) {
-                *++text = IMM;
-                *++text = -token_val;
-                match(Num);
+            if (_token == Num) {
+                *++_text = IMM;
+                *++_text = -token_val;
+                Match(Num);
             }
             // 表达式递归求值 * -1
             else {
-                *++text = IMM;
-                *++text = -1;
-                *++text = PUSH;
-                expression(Inc);
-                *++text = MUL;
+                *++_text = IMM;
+                *++_text = -1;
+                *++_text = PUSH;
+                Expression(Inc);
+                *++_text = MUL;
             }
 
-            expr_type = INT;
+            _expr_type = INT;
             break;
         }
         case Inc:
         case Dec: {
             // 前置 ++ --
-            intptr_t old_token = token;
-            match(token);
-            expression(Inc);
+            intptr_t old_token = _token;
+            Match(_token);
+            Expression(Inc);
             // LC和LI的出现表示当前操作的是数组或指针
-            if (*text == LC) {
-                *text = PUSH;
-                *++text = LC;
+            if (*_text == LC) {
+                *_text = PUSH;
+                *++_text = LC;
             }
-            else if (*text == LI) {
-                *text = PUSH;
-                *++text = LI;
+            else if (*_text == LI) {
+                *_text = PUSH;
+                *++_text = LI;
             }
             else {
-                LOG.AddErrorLog(std::to_string(line) + "不可前置操作的左值");
+                LOG.AddErrorLog(std::to_string(_line) + "不可前置操作的左值");
                 exit(-1);
             }
-            *++text = PUSH;
-            *++text = IMM;
-            *++text = (expr_type > PTR) ? sizeof(intptr_t) : sizeof(char);
-            *++text = (old_token == Inc) ? ADD : SUB;
-            *++text = (expr_type == CHAR) ? SC : SI;
+            *++_text = PUSH;
+            *++_text = IMM;
+            *++_text = (_expr_type > PTR) ? sizeof(intptr_t) : sizeof(char);
+            *++_text = (old_token == Inc) ? ADD : SUB;
+            *++_text = (_expr_type == CHAR) ? SC : SI;
             break;
         }
         default:
-            LOG.AddErrorLog(std::to_string(line) + "编译错误");
+            LOG.AddErrorLog(std::to_string(_line) + "编译错误");
             exit(-1);
 
             break;
     }
     // 为了处理右侧所有优先级更高的情况，因此这里用while,不断向右扫描，直到遇到优先级小于当前优先级的运算符
-    while (token >= level) {
+    while (_token >= level) {
         // 根据当前优先级处理
-        intptr_t tmp_type = expr_type;
-        switch (token) {
+        intptr_t tmp_type = _expr_type;
+        switch (_token) {
             // 赋值运算符
             case Assign:
-                match(Assign);
-                if (*text == LC || *text == LI) {
-                    *text = PUSH;
+                Match(Assign);
+                if (*_text == LC || *_text == LI) {
+                    *_text = PUSH;
                 }
                 else {
-                    LOG.AddErrorLog(std::to_string(line) + ":赋值时出现错误的左值");
+                    LOG.AddErrorLog(std::to_string(_line) + ":赋值时出现错误的左值");
                     exit(-1);
                 }
-                expression(Assign);
+                Expression(Assign);
 
-                expr_type = tmp_type;
-                *++text = (expr_type == CHAR) ? SC : SI;
+                _expr_type = tmp_type;
+                *++_text = (_expr_type == CHAR) ? SC : SI;
                 break;
             // 三目运算符(if)
             case Cond: {
-                match(Cond);
-                *++text = JZ;
-                intptr_t *addr = ++text;
-                expression(Assign);
-                if (token == ':') {
-                    match(':');
+                Match(Cond);
+                *++_text = JZ;
+                intptr_t *addr = ++_text;
+                Expression(Assign);
+                if (_token == ':') {
+                    Match(':');
                 }
                 else {
-                    LOG.AddErrorLog(std::to_string(line) + ":三目运算符缺少':'");
+                    LOG.AddErrorLog(std::to_string(_line) + ":三目运算符缺少':'");
                     exit(-1);
                 }
-                *addr = (intptr_t)(text + 3);
-                *++text = JMP;
-                addr = ++text;
-                expression(Cond);
-                *addr = (intptr_t)(text + 1);
+                *addr = (intptr_t)(_text + 3);
+                *++_text = JMP;
+                addr = ++_text;
+                Expression(Cond);
+                *addr = (intptr_t)(_text + 1);
                 break;
             }
             // ||
             case Lor: {
-                match(Lor);
-                *++text = JNZ;
-                intptr_t* addr = ++text;
-                expression(Lan);
-                *addr = (intptr_t)(text + 1);
-                expr_type = INT;
+                Match(Lor);
+                *++_text = JNZ;
+                intptr_t* addr = ++_text;
+                Expression(Lan);
+                *addr = (intptr_t)(_text + 1);
+                _expr_type = INT;
                 break;
             }
             // &&
             case Lan: {
-                match(Lan);
-                *++text = JZ;
-                intptr_t *addr = ++text;
-                expression(Or);
-                *addr = (intptr_t)(text + 1);
-                expr_type = INT;
+                Match(Lan);
+                *++_text = JZ;
+                intptr_t *addr = ++_text;
+                Expression(Or);
+                *addr = (intptr_t)(_text + 1);
+                _expr_type = INT;
                 break;
             }
             // |
             case Or:
-                match(Or);
-                *++text = PUSH;
-                expression(Xor);
-                *++text = OR;
-                expr_type = INT;
+                Match(Or);
+                *++_text = PUSH;
+                Expression(Xor);
+                *++_text = OR;
+                _expr_type = INT;
                 break;
             // ^
             case Xor:
-                match(Xor);
-                *++text = PUSH;
-                expression(And);
-                *++text = XOR;
-                expr_type = INT;
+                Match(Xor);
+                *++_text = PUSH;
+                Expression(And);
+                *++_text = XOR;
+                _expr_type = INT;
                 break;
             // &
             case And:
-                match(And);
-                *++text = PUSH;
-                expression(Eq);
-                *++text = AND;
-                expr_type = INT;
+                Match(And);
+                *++_text = PUSH;
+                Expression(Eq);
+                *++_text = AND;
+                _expr_type = INT;
                 break;
             // ==
             case Eq:
-                match(Eq);
-                *++text = PUSH;
-                expression(Ne);
-                *++text = EQ;
-                expr_type = INT;
+                Match(Eq);
+                *++_text = PUSH;
+                Expression(Ne);
+                *++_text = EQ;
+                _expr_type = INT;
                 break;
             // !=
             case Ne:
-                match(Ne);
-                *++text = PUSH;
-                expression(Lt);
-                *++text = NE;
-                expr_type = INT;
+                Match(Ne);
+                *++_text = PUSH;
+                Expression(Lt);
+                *++_text = NE;
+                _expr_type = INT;
                 break;
             // <
             case Lt:
-                match(Lt);
-                *++text = PUSH;
-                expression(Shl);
-                *++text = LT;
-                expr_type = INT;
+                Match(Lt);
+                *++_text = PUSH;
+                Expression(Shl);
+                *++_text = LT;
+                _expr_type = INT;
                 break;
             case Gt:
-                match(Gt);
-                *++text = PUSH;
-                expression(Shl);
-                *++text = GT;
-                expr_type = INT;
+                Match(Gt);
+                *++_text = PUSH;
+                Expression(Shl);
+                *++_text = GT;
+                _expr_type = INT;
                 break;
             // <=
             case Le:
-                match(Le);
-                *++text = PUSH;
-                expression(Shl);
-                *++text = LE;
-                expr_type = INT;
+                Match(Le);
+                *++_text = PUSH;
+                Expression(Shl);
+                *++_text = LE;
+                _expr_type = INT;
                 break;
             // >=
             case Ge:
-                match(Ge);
-                *++text = PUSH;
-                expression(Shl);
-                *++text = GE;
-                expr_type = INT;
+                Match(Ge);
+                *++_text = PUSH;
+                Expression(Shl);
+                *++_text = GE;
+                _expr_type = INT;
                 break;
             // <<
             case Shl:
-                match(Shl);
-                *++text = PUSH;
-                expression(Add);
-                *++text = SHL;
-                expr_type = INT;
+                Match(Shl);
+                *++_text = PUSH;
+                Expression(Add);
+                *++_text = SHL;
+                _expr_type = INT;
                 break;
             // >>
             case Shr:
-                match(Shr);
-                *++text = PUSH;
-                expression(Add);
-                *++text = SHR;
-                expr_type = INT;
+                Match(Shr);
+                *++_text = PUSH;
+                Expression(Add);
+                *++_text = SHR;
+                _expr_type = INT;
                 break;
             // +
             case Add: {
-                match(Add);
-                *++text = PUSH;
-                expression(Mul);
+                Match(Add);
+                *++_text = PUSH;
+                Expression(Mul);
 
-                expr_type = tmp_type;
+                _expr_type = tmp_type;
                 // 指针 + val ==> 值 + sizeof(intptr_t) * val
-                if (expr_type > PTR) {
-                    *++text = PUSH;
-                    *++text = IMM;
-                    *++text = sizeof(intptr_t);
-                    *++text = MUL;
+                if (_expr_type > PTR) {
+                    *++_text = PUSH;
+                    *++_text = IMM;
+                    *++_text = sizeof(intptr_t);
+                    *++_text = MUL;
                 }
-                *++text = ADD;
+                *++_text = ADD;
                 break;
             }
             // -
             case Sub: {
-                match(Sub);
-                *++text = PUSH;
-                expression(Mul);
+                Match(Sub);
+                *++_text = PUSH;
+                Expression(Mul);
                 // 指针相减
-                if (tmp_type > PTR && tmp_type == expr_type) {
-                    *++text = SUB;
-                    *++text = PUSH;
-                    *++text = IMM;
-                    *++text = sizeof(intptr_t);
-                    *++text = DIV;
-                    expr_type = INT;
+                if (tmp_type > PTR && tmp_type == _expr_type) {
+                    *++_text = SUB;
+                    *++_text = PUSH;
+                    *++_text = IMM;
+                    *++_text = sizeof(intptr_t);
+                    *++_text = DIV;
+                    _expr_type = INT;
                 }
                 // 指针减法
                 else if (tmp_type > PTR) {
-                    *++text = PUSH;
-                    *++text = IMM;
-                    *++text = sizeof(intptr_t);
-                    *++text = MUL;
-                    *++text = SUB;
-                    expr_type = tmp_type;
+                    *++_text = PUSH;
+                    *++_text = IMM;
+                    *++_text = sizeof(intptr_t);
+                    *++_text = MUL;
+                    *++_text = SUB;
+                    _expr_type = tmp_type;
                 }
                 // 数字减法
                 else {
-                    *++text = SUB;
-                    expr_type = tmp_type;
+                    *++_text = SUB;
+                    _expr_type = tmp_type;
                 }
                 break;
             }
             // *
             case Mul:
-                match(Mul);
-                *++text = PUSH;
-                expression(Inc);
-                *++text = MUL;
-                expr_type = tmp_type;
+                Match(Mul);
+                *++_text = PUSH;
+                Expression(Inc);
+                *++_text = MUL;
+                _expr_type = tmp_type;
                 break;
             // /
             case Div:
-                match(Div);
-                *++text = PUSH;
-                expression(Inc);
-                *++text = DIV;
-                expr_type = tmp_type;
+                Match(Div);
+                *++_text = PUSH;
+                Expression(Inc);
+                *++_text = DIV;
+                _expr_type = tmp_type;
                 break;
             // %
             case Mod:
-                match(Mod);
-                *++text = PUSH;
-                expression(Inc);
-                *++text = MOD;
-                expr_type = tmp_type;
+                Match(Mod);
+                *++_text = PUSH;
+                Expression(Inc);
+                *++_text = MOD;
+                _expr_type = tmp_type;
                 break;
             // 后置++ --
             case Inc:
             case Dec:
-                if (*text == LI) {
-                    *text = PUSH;
-                    *++text = LI;
+                if (*_text == LI) {
+                    *_text = PUSH;
+                    *++_text = LI;
                 }
-                else if (*text == LC) {
-                    *text = PUSH;
-                    *++text = LC;
+                else if (*_text == LC) {
+                    *_text = PUSH;
+                    *++_text = LC;
                 }
                 else {
-                    LOG.AddErrorLog(std::to_string(line) + ":错误的后置自增");
+                    LOG.AddErrorLog(std::to_string(_line) + ":错误的后置自增");
                     exit(-1);
                 }
 
-                *++text = PUSH;
-                *++text = IMM;
-                *++text = (expr_type > PTR) ? sizeof(intptr_t) : sizeof(char);
-                *++text = (token == Inc) ? ADD : SUB;
-                *++text = (expr_type == CHAR) ? SC : SI;
-                *++text = PUSH;
-                *++text = IMM;
-                *++text = (expr_type > PTR) ? sizeof(intptr_t) : sizeof(char);
-                *++text = (token == Inc) ? SUB : ADD;
-                match(token);
+                *++_text = PUSH;
+                *++_text = IMM;
+                *++_text = (_expr_type > PTR) ? sizeof(intptr_t) : sizeof(char);
+                *++_text = (_token == Inc) ? ADD : SUB;
+                *++_text = (_expr_type == CHAR) ? SC : SI;
+                *++_text = PUSH;
+                *++_text = IMM;
+                *++_text = (_expr_type > PTR) ? sizeof(intptr_t) : sizeof(char);
+                *++_text = (_token == Inc) ? SUB : ADD;
+                Match(_token);
                 break;
             // [] ==> *(arr + val)
             case Brak:
-                match(Brak);
-                *++text = PUSH;
-                expression(Assign);
-                match(']');
+                Match(Brak);
+                *++_text = PUSH;
+                Expression(Assign);
+                Match(']');
 
                 if (tmp_type > PTR) {
-                    *++text = PUSH;
-                    *++text = IMM;
-                    *++text = sizeof(intptr_t);
-                    *++text = MUL;
+                    *++_text = PUSH;
+                    *++_text = IMM;
+                    *++_text = sizeof(intptr_t);
+                    *++_text = MUL;
                 }
                 else if (tmp_type < PTR) {
-                    LOG.AddErrorLog(std::to_string(line) + ":期望得到指针类型");
+                    LOG.AddErrorLog(std::to_string(_line) + ":期望得到指针类型");
                     exit(-1);
                 }
-                expr_type = tmp_type - PTR;
-                *++text = ADD;
-                *++text = (expr_type == CHAR) ? LC : LI;
+                _expr_type = tmp_type - PTR;
+                *++_text = ADD;
+                *++_text = (_expr_type == CHAR) ? LC : LI;
                 break;
             default:
-                    LOG.AddErrorLog(std::to_string(line) + ":编译错误,token = " + std::to_string(token));
+                    LOG.AddErrorLog(std::to_string(_line) + ":编译错误,_token = " + std::to_string(_token));
                     exit(-1);
                 break;
         }
@@ -825,137 +825,137 @@ void Interpreter::expression(intptr_t level) {
 /*******************************************************************************
  * 解析语句
 *******************************************************************************/
-void Interpreter::statement() {
+void Interpreter::Statement() {
     // 支持如下6种语句
-    // 1. if (...) <statement> [else <statement>]
-    // 2. while (...) <statement>
-    // 3. { <statement> }
+    // 1. if (...) <Statement> [else <Statement>]
+    // 2. while (...) <Statement>
+    // 3. { <Statement> }
     // 4. return xxx;
-    // 5. <empty statement>;
-    // 6. expression; (expression end with semicolon)
+    // 5. <empty Statement>;
+    // 6. Expression; (Expression end with semicolon)
 
     intptr_t *a = nullptr, *b = nullptr;
-    LOG.AddLog("statement" + std::to_string(token));
-    if (token == If) {
-        // if (...) <statement> [else <statement>]
+    LOG.AddLog("Statement" + std::to_string(_token));
+    if (_token == If) {
+        // if (...) <Statement> [else <Statement>]
         //
         //   if (...)           <cond>
         //                      JZ a
-        //     <statement>      <statement>
+        //     <Statement>      <Statement>
         //   else:              JMP b
         // a:
-        //     <statement>      <statement>
+        //     <Statement>      <Statement>
         // b:                   b:
         //
         //
-        match(If);
-        match('(');
-        expression(Assign);  // 解析条件
-        match(')');
+        Match(If);
+        Match('(');
+        Expression(Assign);  // 解析条件
+        Match(')');
 
-        *++text = JZ;
-        b = ++text;
+        *++_text = JZ;
+        b = ++_text;
 
-        statement();         // 解析语句
-        if (token == Else) { // 解析else
-            match(Else);
+        Statement();         // 解析语句
+        if (_token == Else) { // 解析else
+            Match(Else);
 
-            *b = (intptr_t)(text + 3);
-            *++text = JMP;
-            b = ++text;
+            *b = (intptr_t)(_text + 3);
+            *++_text = JMP;
+            b = ++_text;
 
-            statement();
+            Statement();
         }
 
-        *b = (intptr_t)(text + 1);
+        *b = (intptr_t)(_text + 1);
     }
-    else if (token == While) {
+    else if (_token == While) {
         //
         // a:                     a:
         //    while (<cond>)        <cond>
         //                          JZ b
-        //     <statement>          <statement>
+        //     <Statement>          <Statement>
         //                          JMP a
         // b:                     b:
-        match(While);
+        Match(While);
 
-        a = text + 1;
+        a = _text + 1;
 
-        match('(');
-        expression(Assign);
-        match(')');
+        Match('(');
+        Expression(Assign);
+        Match(')');
 
-        *++text = JZ;
-        b = ++text;
+        *++_text = JZ;
+        b = ++_text;
 
-        statement();
+        Statement();
 
-        *++text = JMP;
-        *++text = (intptr_t)a;
-        *b = (intptr_t)(text + 1);
+        *++_text = JMP;
+        *++_text = (intptr_t)a;
+        *b = (intptr_t)(_text + 1);
     }
-    else if (token == '{') {
-        match('{');
+    else if (_token == '{') {
+        Match('{');
 
-        while (token != '}') {
-            statement();
+        while (_token != '}') {
+            Statement();
         }
 
-        match('}');
+        Match('}');
     }
-    else if (token == Return) {
-        // return [expression];
-        match(Return);
+    else if (_token == Return) {
+        // return [Expression];
+        Match(Return);
 
-        if (token != ';') {
-            expression(Assign);
+        if (_token != ';') {
+            Expression(Assign);
         }
 
-        match(';');
+        Match(';');
 
         // 返回
-        *++text = LEV;
+        *++_text = LEV;
     }
-    else if (token == ';') {
+    else if (_token == ';') {
         // 空语句
-        match(';');
+        Match(';');
     }
     else {
         // 表达式
-        expression(Assign);
-        match(';');
+        Expression(Assign);
+        Match(';');
     }
 }
 
 /*******************************************************************************
  * 解析enum
 *******************************************************************************/
-void Interpreter::enum_declaration() {
+void Interpreter::EnumDeclaration() {
     // parse enum [id] { a = 1, b = 3, ...}
     intptr_t enum_val = 0;
-    while (token != '}') {
-        if (token != Id) {
-            LOG.AddErrorLog(std::to_string(line) + ":错误enum标识符");
+    while (_token != '}') {
+        if (_token != Id) {
+            LOG.AddErrorLog(std::to_string(_line) + ":错误enum标识符");
             exit(-1);
         }
-        next();
+        Next();
         // {VAL = 10,VAL2 = 20}
-        if (token == Assign) {
-            next();
-            if (token != Num) {
-                LOG.AddErrorLog(std::to_string(line) + "错误的enum初始化值");
+        if (_token == Assign) {
+            Next();
+            if (_token != Num) {
+                LOG.AddErrorLog(std::to_string(_line) + "错误的enum初始化值");
                 exit(-1);
             }
             enum_val = token_val;
-            next();
+            Next();
         }
 
         current_id->_class = Num;
         current_id->_type = INT;
         current_id->_value = enum_val++;
 
-        if (token == ',') {
-            next();
+        if (_token == ',') {
+            Next();
         }
     }
 }
@@ -963,111 +963,110 @@ void Interpreter::enum_declaration() {
 /*******************************************************************************
  * 解析函数参数
 *******************************************************************************/
-void Interpreter::function_parameter() {
+void Interpreter::FunctionParameter() {
     intptr_t params = 0;
-    while (token != ')') {
+    while (_token != ')') {
         intptr_t type = INT;
-        if (token == Int) {
-            match(Int);
+        if (_token == Int) {
+            Match(Int);
         }
-        else if (token == Char) {
+        else if (_token == Char) {
             type = CHAR;
-            match(Char);
+            Match(Char);
         }
 
         // 指针类型
-        while (token == Mul) {
-            match(Mul);
+        while (_token == Mul) {
+            Match(Mul);
             type = type + PTR;
         }
 
         // 参数名
-        if (token != Id) {
-            LOG.AddErrorLog(std::to_string(line) + ":错误的参数声明");
+        if (_token != Id) {
+            LOG.AddErrorLog(std::to_string(_line) + ":错误的参数声明");
             exit(-1);
         }
         if (current_id->_class == Loc) {
-            LOG.AddErrorLog(std::to_string(line) + ":重复的参数声明");
+            LOG.AddErrorLog(std::to_string(_line) + ":重复的参数声明");
             exit(-1);
         }
 
-        match(Id);
+        Match(Id);
         // 局部覆盖全局
         current_id->_backup_class = current_id->_class; current_id->_class  = Loc;
         current_id->_backup_type  = current_id->_type;  current_id->_type   = type;
         current_id->_backup_value = current_id->_value; current_id->_value  = params++;
 
-        if (token == ',') {
-            match(',');
+        if (_token == ',') {
+            Match(',');
         }
     }
-    // params 保存参数数量，并修改index_of_bp来调整函数的栈帧
-    index_of_bp = params+1;
+    // params 保存参数数量，并修改_index_of_bp来调整函数的栈帧
+    _index_of_bp = params+1;
 }
 
 /*******************************************************************************
  * 解析函数体
 *******************************************************************************/
-void Interpreter::function_body() {
-    intptr_t pos_local; // 本地变量所在栈地址
+void Interpreter::FunctionBody() {
+    intptr_t pos_local = _index_of_bp; // 本地变量所在栈地址
     intptr_t type;
-    pos_local = index_of_bp;
 
-    while (token == Int || token == Char) {
-        basetype = (token == Int) ? INT : CHAR;
-        match(token);
+    while (_token == Int || _token == Char) {
+        _basetype = (_token == Int) ? INT : CHAR;
+        Match(_token);
 
-        while (token != ';') {
-            type = basetype;
-            while (token == Mul) {
-                match(Mul);
+        while (_token != ';') {
+            type = _basetype;
+            while (_token == Mul) {
+                Match(Mul);
                 type = type + PTR;
             }
 
-            if (token != Id) {
-                LOG.AddErrorLog(std::to_string(line) + ":错误的本地变量声明");
+            if (_token != Id) {
+                LOG.AddErrorLog(std::to_string(_line) + ":错误的本地变量声明");
                 exit(-1);
             }
             if (current_id->_class == Loc) {
-                LOG.AddErrorLog(std::to_string(line) + "本地变量重复声明");
+                LOG.AddErrorLog(std::to_string(_line) + "本地变量重复声明");
                 exit(-1);
             }
-            match(Id);
+            Match(Id);
 
             // 保存本地变量
             current_id->_backup_class = current_id->_class; current_id->_class  = Loc;
             current_id->_backup_type  = current_id->_type;  current_id->_type   = type;
             current_id->_backup_value = current_id->_value; current_id->_value  = ++pos_local;
 
-            if (token == ',') {
-                match(',');
+            if (_token == ',') {
+                Match(',');
             }
         }
-        match(';');
+        Match(';');
     }
 
     // 在函数调用时开辟参数所需大小
-    *++text = ENT;
-    *++text = pos_local - index_of_bp;
+    *++_text = ENT;
+    *++_text = pos_local - _index_of_bp;
 
-    while (token != '}') {
-        statement();
+    while (_token != '}') {
+        Statement();
     }
 
     // 函数返回
-    *++text = LEV;
+    *++_text = LEV;
 }
 
 /*******************************************************************************
  * 解析函数声明
 *******************************************************************************/
-void Interpreter::function_declaration() {
-    match('(');
-    function_parameter();
-    match(')');
-    match('{');
-    function_body();
-    //match('}');
+void Interpreter::FunctionDeclaration() {
+    Match('(');
+    FunctionParameter();
+    Match(')');
+    Match('{');
+    FunctionBody();
+    //Match('}');
 
     // unwind local variable declarations for all local variables.
     for (auto& up : symbols) {
@@ -1094,256 +1093,254 @@ void Interpreter::function_declaration() {
 /*******************************************************************************
  * 全局的变量定义，类型定义（仅支持enum），函数定义
 *******************************************************************************/
-void Interpreter::global_declaration() {
+void Interpreter::GlobalDeclaration() {
     // int [*]id [; | (...) {...}]
-    basetype = INT;
+    _basetype = INT;
 
     // 解析enum
     // enum [id] { a = 10, b = 20, ... }
-    if (token == Enum) {
-        match(Enum);
-        if (token != '{') {
-            match(Id); // 匹配id
+    if (_token == Enum) {
+        Match(Enum);
+        if (_token != '{') {
+            Match(Id); // 匹配id
         }
-        if (token == '{') {
-            match('{');
-            enum_declaration();
-            match('}');
+        if (_token == '{') {
+            Match('{');
+            EnumDeclaration();
+            Match('}');
         }
 
-        match(';');
+        Match(';');
         return;
     }
 
     // 解析类型信息
-    if (token == Int) {
-        match(Int);
+    if (_token == Int) {
+        Match(Int);
     }
-    else if (token == Char) {
-        match(Char);
-        basetype = CHAR;
+    else if (_token == Char) {
+        Match(Char);
+        _basetype = CHAR;
     }
 
     // 解析','分隔的变量声明
-    while (token != ';' && token != '}') {
-        int type = basetype;
+    while (_token != ';' && _token != '}') {
+        int type = _basetype;
         // 解析指针类型，为了处理多重指针，使用while
-        while (token == Mul) {
-            match(Mul);
+        while (_token == Mul) {
+            Match(Mul);
             type = type + PTR;
         }
 
         // 是否存在标识符
-        if (token != Id) {
-            LOG.AddErrorLog(std::to_string(line) + ":错误的全局声明");
+        if (_token != Id) {
+            LOG.AddErrorLog(std::to_string(_line) + ":错误的全局声明");
             exit(-1);
         }
         if (current_id->_class) {
-            LOG.AddErrorLog(std::to_string(line) + ":重复的全局声明");
+            LOG.AddErrorLog(std::to_string(_line) + ":重复的全局声明");
             exit(-1);
         }
-        match(Id);
+        Match(Id);
         current_id->_type = type;
 
         // 如果是函数
-        if (token == '(') {
+        if (_token == '(') {
             current_id->_class = Fun;
-            current_id->_value = (intptr_t)(text + 1);
-            function_declaration();
+            current_id->_value = (intptr_t)(_text + 1);
+            FunctionDeclaration();
         }
         // 变量类型
         else {
             current_id->_class = Glo;
-            current_id->_value = (intptr_t)data;
-            data = data + sizeof(intptr_t);
+            current_id->_value = (intptr_t)_data;
+            _data = _data + sizeof(intptr_t);
         }
-        if (token == ',') {
-            match(',');
+        if (_token == ',') {
+            Match(',');
         }
     }
 
-    next();
+    Next();
 }
 
 /*******************************************************************************
  * 语法解析入口
 *******************************************************************************/
-void Interpreter::program() {
-    next();
-    while (token > 0) {
-        global_declaration();
+void Interpreter::Program() {
+    Next();
+    while (_token > 0) {
+        GlobalDeclaration();
     }
 }
 
 /*******************************************************************************
  * 虚拟机，模拟计算机堆栈运行
 *******************************************************************************/
-int Interpreter::eval() {
-    cycle = 0;
+int Interpreter::Eval() {
     while (true) {
-        cycle ++;
-        intptr_t op = *pc++;
+        intptr_t op = *_rip++;
         switch(op) {
             case IMM:
-                rax = *pc ++;
-                COUTASM("mov %pc,rax");
+                _rax = *_rip ++;
+                COUTASM("mov %_rip,_rax");
                 break;
             case LC:
-                rax = *(char *)rax;
-                COUTASM("LC rax,rax");
+                _rax = *(char *)_rax;
+                COUTASM("LC _rax,_rax");
                 break;
             case LI:
-                rax = *(intptr_t *)rax;
-                COUTASM("LI rax,rax");
+                _rax = *(intptr_t *)_rax;
+                COUTASM("LI _rax,_rax");
                 break;
             case SC:
-                rax = *(char *)sp = rax;
-                sp ++;
-                COUTASM("mov rax,sp");
+                _rax = *(char *)_rsp = _rax;
+                _rsp ++;
+                COUTASM("mov _rax,_rsp");
                 break;
             case SI:
-                *(intptr_t *)*sp = rax;
-                sp ++;
-                COUTASM("mov rax,sp");
+                *(intptr_t *)*_rsp = _rax;
+                _rsp ++;
+                COUTASM("mov _rax,_rsp");
                 break;
             case PUSH:
-                *--sp = rax;
-                COUTASM("push rax");
+                *--_rsp = _rax;
+                COUTASM("push _rax");
                 break;
             case JMP:
-                pc = (intptr_t *)*pc;
-                COUTASM("JMP pc");
+                _rip = (intptr_t *)*_rip;
+                COUTASM("JMP _rip");
                 break;
             case JZ:
-                if (rax != 0) {
-                    pc ++;
+                if (_rax != 0) {
+                    _rip ++;
                 }
                 else {
-                    pc = (intptr_t *)*pc;
+                    _rip = (intptr_t *)*_rip;
                 }
-                COUTASM("JZ pc");
+                COUTASM("JZ _rip");
                 break;
             case JNZ:
-                if (rax != 0) {
-                    pc = (intptr_t *)*pc;
+                if (_rax != 0) {
+                    _rip = (intptr_t *)*_rip;
                 }
                 else {
-                    pc ++;
+                    _rip ++;
                 }
-                COUTASM("JNZ pc");
+                COUTASM("JNZ _rip");
                 break;
             case CALL:
-                *--sp = (intptr_t)(pc + 1);
-                pc = (intptr_t *)*pc;
-                COUTASM("CALL " + std::to_string((intptr_t)pc));
+                *--_rsp = (intptr_t)(_rip + 1);
+                _rip = (intptr_t *)*_rip;
+                COUTASM("CALL " + std::to_string((intptr_t)_rip));
                 break;
             case ENT:
-                *--sp = (intptr_t)bp;
-                bp = sp;
-                sp = sp - *pc;
-                pc ++;
+                *--_rsp = (intptr_t)_rbp;
+                _rbp = _rsp;
+                _rsp = _rsp - *_rip;
+                _rip ++;
                 COUTASM("ENT");
                 break;
             case ADJ:
-                sp = sp + *pc;
-                pc ++;
+                _rsp = _rsp + *_rip;
+                _rip ++;
                 COUTASM("ADJ");
                 break;
             case LEV:
-                sp = bp;
-                bp = (intptr_t *)*sp;
-                sp ++;
-                pc = (intptr_t *)*sp;
-                sp ++;
+                _rsp = _rbp;
+                _rbp = (intptr_t *)*_rsp;
+                _rsp ++;
+                _rip = (intptr_t *)*_rsp;
+                _rsp ++;
                 COUTASM("LEV");
                 break;
             case LEA:
-                rax = (intptr_t)(bp + *pc);
-                pc ++;
+                _rax = (intptr_t)(_rbp + *_rip);
+                _rip ++;
                 COUTASM("LEA");
                 break;
-#define OPERATOR_BREAK(op) rax = *sp++ op rax;break
+#define OPERATOR_BREAK(op) _rax = *_rsp++ op _rax;break
             case OR:
                 OPERATOR_BREAK(|);
-                COUTASM("OR *sp,rax");
+                COUTASM("OR *_rsp,_rax");
             case XOR:
                 OPERATOR_BREAK(^);
-                COUTASM("XOR sp,rax");
+                COUTASM("XOR _rsp,_rax");
             case AND:
                 OPERATOR_BREAK(&);
-                COUTASM("AND sp,rax");
+                COUTASM("AND _rsp,_rax");
             case EQ:
                 OPERATOR_BREAK(==);
-                COUTASM("EQ sp,rax");
+                COUTASM("EQ _rsp,_rax");
             case NE:
                 OPERATOR_BREAK(!=);
-                COUTASM("NE sp,rax");
+                COUTASM("NE _rsp,_rax");
             case LT:
                 OPERATOR_BREAK(<);
-                COUTASM("LT sp,rax");
+                COUTASM("LT _rsp,_rax");
             case LE:
                 OPERATOR_BREAK(<=);
-                COUTASM("LE sp,rax");
+                COUTASM("LE _rsp,_rax");
             case GT:
                 OPERATOR_BREAK(>);
-                COUTASM("GT sp,rax");
+                COUTASM("GT _rsp,_rax");
             case GE:
                 OPERATOR_BREAK(>=);
-                COUTASM("GE sp,rax");
+                COUTASM("GE _rsp,_rax");
             case SHL:
                 OPERATOR_BREAK(<<);
-                COUTASM("SHL sp,rax");
+                COUTASM("SHL _rsp,_rax");
             case SHR:
                 OPERATOR_BREAK(>>);
-                COUTASM("SHR sp,rax");
+                COUTASM("SHR _rsp,_rax");
             case ADD:
                 OPERATOR_BREAK(+);
-                COUTASM("ADD sp,rax");
+                COUTASM("ADD _rsp,_rax");
             case SUB:
                 OPERATOR_BREAK(-);
-                COUTASM("SUB sp,rax");
+                COUTASM("SUB _rsp,_rax");
             case MUL:
                 OPERATOR_BREAK(*);
-                COUTASM("MUL sp,rax");
+                COUTASM("MUL _rsp,_rax");
             case DIV:
                 OPERATOR_BREAK(/);
-                COUTASM("DIV sp,rax");
+                COUTASM("DIV _rsp,_rax");
             case MOD:
                 OPERATOR_BREAK(%);
-                COUTASM("MOD sp,rax");
+                COUTASM("MOD _rsp,_rax");
 #undef OPERATOR
             case EXIT:
-                if (*sp == 0){
-                    LOG.AddLog("exit(" + std::to_string(*sp) + ")");
+                if (*_rsp == 0){
+                    LOG.AddLog("exit(" + std::to_string(*_rsp) + ")");
                 }
                 else {
-                    LOG.AddErrorLog("exit(" + std::to_string(*sp) + ")");
+                    LOG.AddErrorLog("exit(" + std::to_string(*_rsp) + ")");
                 }
-                return *sp;
+                return *_rsp;
                 break;
             case PRTF: {
-                intptr_t *tmp = sp + pc[1];
+                intptr_t *tmp = _rsp + _rip[1];
                 char buf[1024] = {0};
-                rax = sprintf(buf,(char *)tmp[-1], tmp[-2], tmp[-3], tmp[-4], tmp[-5], tmp[-6]);
+                _rax = sprintf(buf,(char *)tmp[-1], tmp[-2], tmp[-3], tmp[-4], tmp[-5], tmp[-6]);
 
                 if (!_assembly)
                     RUNRESULT.Output(std::string(buf));
                 break;
             }
             case MALC:
-                rax = (intptr_t)malloc(*sp);
+                _rax = (intptr_t)malloc(*_rsp);
                 break;
             case MSET:
-                rax = (intptr_t)memset((char*)sp[2],sp[1],*sp);
+                _rax = (intptr_t)memset((char*)_rsp[2],_rsp[1],*_rsp);
                 break;
             case MCMP:
-                rax = memcmp((char*)sp[2],(char*)sp[1],*sp);
+                _rax = memcmp((char*)_rsp[2],(char*)_rsp[1],*_rsp);
                 break;
             default:
 
-//        else if (op == OPEN) { rax = open((char *)sp[1], sp[0]); }
-//        else if (op == CLOS) { rax = close(*sp);}
-//        else if (op == READ) { rax = read(sp[2], (char *)sp[1], *sp); }
+//        else if (op == OPEN) { _rax = open((char *)_rsp[1], _rsp[0]); }
+//        else if (op == CLOS) { _rax = close(*_rsp);}
+//        else if (op == READ) { _rax = read(_rsp[2], (char *)_rsp[1], *_rsp); }
                 LOG.AddErrorLog("未知的指令:" + std::to_string(op));
                 return -1;
                 break;
@@ -1352,44 +1349,44 @@ int Interpreter::eval() {
 }
 
 int Interpreter::Run(std::string& file_content) {
-    line = 1;
+    _line = 1;
 
-    memset(text, 0, _pool_size);
-    memset(data, 0, _pool_size);
-    memset(stack, 0, _pool_size);
+    memset(_text, 0, _pool_size);
+    memset(_data, 0, _pool_size);
+    memset(_stack, 0, _pool_size);
 
 
 #ifdef _MSC_VER
     std::string temp = "char else enum if int return sizeof while "
           "open read close printf malloc memset memcmp exit void main";
-    src = &temp[0];
+    _src = &temp[0];
 #else
-    src = "char else enum if int return sizeof while "
+    _src = "char else enum if int return sizeof while "
           "open read close printf malloc memset memcmp exit void main";
 #endif
 
     // 添加关键字到符号表
     for(int i = Char;i <= While;) {
-        next();
+        Next();
         current_id->_token = i++;
     }
 
     // add library to symbol table
     for(int i = OPEN;i <= EXIT;) {
-        next();
+        Next();
         current_id->_class = Sys;
         current_id->_type = INT;
         current_id->_value = i++;
     }
 
-    next(); 
+    Next(); 
     current_id->_token = Char;
-    next(); 
+    Next(); 
 
 
-    src = &file_content[0];
+    _src = &file_content[0];
 
-    program();
+    Program();
 
     Symbol main_id;
     for (const auto& tmp : symbols) {
@@ -1397,7 +1394,7 @@ int Interpreter::Run(std::string& file_content) {
             main_id = tmp;
         }
     }
-    if (!(pc = (intptr_t *)(main_id._value))) {
+    if (!(_rip = (intptr_t *)(main_id._value))) {
         LOG.AddErrorLog("main 函数未定义\n");
         return -1;
     }
@@ -1405,32 +1402,32 @@ int Interpreter::Run(std::string& file_content) {
 
     // 初始化栈
     intptr_t *tmp;
-    sp = (intptr_t *)((intptr_t)stack + _pool_size);
-    *--sp = EXIT; // main返回时调用EXIT
-    *--sp = PUSH; tmp = sp;
-    *--sp = (intptr_t)tmp;
+    _rsp = (intptr_t *)((intptr_t)_stack + _pool_size);
+    *--_rsp = EXIT; // main返回时调用EXIT
+    *--_rsp = PUSH; tmp = _rsp;
+    *--_rsp = (intptr_t)tmp;
 
-    return eval();
+    return Eval();
 }
 
 Interpreter::Interpreter() {
-    delete_text = text = (intptr_t *)new char[_pool_size];
-    delete_data = data = (char *)new char[_pool_size];
-    delete_stack = stack = (intptr_t *)new char[_pool_size];
-    delete_src = src = old_src = (char *)new char[_pool_size];
-    if (text == nullptr || data == nullptr
-        || stack == nullptr
-        || src == nullptr || old_src == nullptr) {
+    _delete_text = _text = (intptr_t *)new char[_pool_size];
+    _delete_data = _data = (char *)new char[_pool_size];
+    _delete_stack = _stack = (intptr_t *)new char[_pool_size];
+    _delete_src = _src = _old_src = (char *)new char[_pool_size];
+    if (_text == nullptr || _data == nullptr
+        || _stack == nullptr
+        || _src == nullptr || _old_src == nullptr) {
         LOG.AddErrorLog("为虚拟机分配内存失败");
     }
 }
 Interpreter::~Interpreter() {
-    delete delete_text;
-    delete delete_data;
-    delete delete_stack;
-    delete delete_src;
-    text = nullptr;
-    data = nullptr;
-    stack = nullptr;
-    src = old_src = nullptr;
+    delete _delete_text;
+    delete _delete_data;
+    delete _delete_stack;
+    delete _delete_src;
+    _text = nullptr;
+    _data = nullptr;
+    _stack = nullptr;
+    _src = _old_src = nullptr;
 }

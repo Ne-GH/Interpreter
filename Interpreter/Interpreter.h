@@ -29,14 +29,14 @@ enum {
 
 // 符号表
 struct Symbol {
-    intptr_t _token = 0;
+    int _token = 0;
     intptr_t _hash = 0;
     std::string _name = "";   // 标识符本身的字符串
-    intptr_t _type = 0;   // 标识符类型，CHAR/INT/PTR
-    intptr_t _class = 0;  // 标识符类型，局部/全局变量
+    int _type = 0;   // 标识符类型，CHAR/INT/PTR
+    int _class = 0;  // 标识符类型，局部/全局变量
     intptr_t _value = 0;  // 标识符的值
-    intptr_t _backup_type = 0;
-    intptr_t _backup_class = 0;
+    int _backup_type = 0;
+    int _backup_class = 0;
     intptr_t _backup_value = 0;
 };
 
@@ -54,7 +54,7 @@ public:
     enum {
         ASM,RUN
     };
-    void SetMod(bool mod) {
+    void SetMod(int mod) {
         if (mod == ASM) {
             _assembly = true;
         }
@@ -65,44 +65,37 @@ public:
 private:
     bool _assembly = false;
     int _pool_size = 1024*256;
-    int token;
+    int _token = 0;
+    int _line;
+    int _basetype;   // 声明类型
+    int _expr_type;  // 表达式类型
+    int _index_of_bp;
+
+    char *_data, *_src, *_old_src;
+    intptr_t *_text, *_stack;
+    intptr_t *_rip, *_rbp, *_rsp, _rax;
 
 
-
-    intptr_t *text, *stack;
-    char *data;
-
-
-    char *src, *old_src;
-
-    intptr_t *pc, *bp, *sp, rax, cycle;
-
+    intptr_t token_val;
     Symbol *current_id;
     std::vector<Symbol> symbols;
 
-    intptr_t line,        // line number of source code
-        token_val;   // value of current token (mainly for number)
-
-    int basetype;    // the type of a declaration, make it global for convenience
-    int expr_type;   // 表达式的类型
-
-    intptr_t index_of_bp; // 局部的栈底指针
 
 
-    intptr_t *delete_text,*delete_stack;
-    char *delete_data,*delete_src;
+    char *_delete_data,*_delete_src;
+    intptr_t *_delete_text,*_delete_stack;
 
-    void next();
-    void match(intptr_t tk);
-    void expression(intptr_t level);
-    void statement();
-    void enum_declaration();
-    void function_parameter();
-    void function_body();
-    void function_declaration();
-    void global_declaration();
-    void program();
-    int eval();
+    void Next();
+    void Match(int tk);
+    void Expression(int level);
+    void Statement();
+    void EnumDeclaration();
+    void FunctionParameter();
+    void FunctionBody();
+    void FunctionDeclaration();
+    void GlobalDeclaration();
+    void Program();
+    int Eval();
 
 
 

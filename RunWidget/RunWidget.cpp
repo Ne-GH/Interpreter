@@ -9,7 +9,7 @@
 RunResult::RunResult(QWidget *parent) :
         QTextEdit(parent) {
     setLineWrapMode(NoWrap);
-
+    
 }
 
 void RunResult::Output(std::string out_message) {
@@ -79,7 +79,7 @@ RunWidget::RunWidget(QWidget *parent) :
     layout->addWidget(_run_result);
     layout->setContentsMargins(0,0,0,0);
     setContentsMargins(0,0,0,0);
-
+    setWindowTitle("运行窗口");
     setWindowIcon(QIcon(":/Resource/terminal.png"));
 
     connect(_run_result,&RunResult::Input,[=]{
