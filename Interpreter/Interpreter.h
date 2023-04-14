@@ -28,7 +28,7 @@ enum {
 };
 
 // 符号表
-struct Symbols {
+struct Symbol {
     intptr_t Token;
     intptr_t Hash;
     std::string Name;   // 标识符本身的字符串
@@ -78,8 +78,8 @@ private:
 
     intptr_t *pc, *bp, *sp, rax, cycle;
 
-    Symbols *idmain,*current_id;
-    Symbols* symbols;
+    Symbol *idmain,*current_id;
+    Symbol* symbols;
     // std::vector<Symbols> symbols;
 
     intptr_t line,        // line number of source code

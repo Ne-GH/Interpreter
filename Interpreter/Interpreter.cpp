@@ -326,7 +326,7 @@ void Interpreter::expression(intptr_t level) {
         }
         case Id: {
             match(Id);
-            Symbols *id = current_id;
+            auto id = current_id;
 
             // 函数调用
             if (token == '(') {
@@ -1391,7 +1391,7 @@ Interpreter::Interpreter() {
     delete_data = data = (char *)new char[_pool_size];
     delete_stack = stack = (intptr_t *)new char[_pool_size];
     delete_src = src = old_src = (char *)new char[_pool_size];
-    symbols = (Symbols *)new char[_pool_size];
+    symbols = (Symbol *)new char[_pool_size];
     if (text == nullptr || data == nullptr
         || stack == nullptr || symbols == nullptr
         || src == nullptr || old_src == nullptr) {
