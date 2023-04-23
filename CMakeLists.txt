@@ -42,6 +42,7 @@ set(PROJECT_SOURCES
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
     # Windows-specific code
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+#    set(CMAKE_CXX_COMPILER "/usr/local/gcc13/bin/g++")
     # Linux-specific code
 else()
     message(FATAL_ERROR "Unsupported system")

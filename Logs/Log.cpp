@@ -1,13 +1,17 @@
 #include "Log.h"
 #include "ui_Log.h"
 
+#if defined(__GNUC__) && (__GNUC__ >= 13)
 #include <format>
+#endif
+
 #include <iostream>
 #include <sstream>
 #include <iomanip>
 #include <chrono>
 
-using std::string,std::format;
+using std::string;
+// using std::format;
 
 Log::Log(QWidget *parent) :
     QDialog(parent),
@@ -25,14 +29,17 @@ Log::~Log() {
 
 
 static string GetData(){
-//    auto now = std::chrono::system_clock::now();
-//    auto time = std::chrono::system_clock::to_time_t(now);
-//    std::stringstream ss;
-//    ss << std::put_time(std::localtime(&time),"%Y/%m/%d %X");
-//    string ret = ss.str();
-//    return ret;
+#if defined(__GNUC__) && (__GNUC__ < 13)
+    auto now = std::chrono::system_clock::now();
+    auto time = std::chrono::system_clock::to_time_t(now);
+    std::stringstream ss;
+    ss << std::put_time(std::localtime(&time),"%Y/%m/%d %X");
+    string ret = ss.str();
+    return ret;
+#elif defined(__GNUC__) && (__GNUC__ >= 13)
     using namespace::std::chrono;
     return std::format("{:%T}",current_zone()->to_local(system_clock::now())).substr(0,8);
+#endif
 }
 
 void Log::AddLog(string message,string log_type) {

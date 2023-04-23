@@ -1,11 +1,6 @@
 #include "Interpreter.h"
 #include "../RunWidget/RunWidget.h"
 #include <fstream>
-#define COUTASM(message) \
-    if (_assembly == true) { \
-        RUNRESULT.Output(std::string(message) + "\n"); \
-    }
-
 
 /*******************************************************************************
  * 词法分析
@@ -1178,38 +1173,43 @@ void Interpreter::Program() {
  * 虚拟机，模拟计算机堆栈运行
 *******************************************************************************/
 int Interpreter::Eval() {
+#define COUTASM(message) \
+    if (_assembly == true) { \
+        RUNRESULT.Output(std::string(message) + "\n"); \
+    }
+
     while (true) {
         intptr_t op = *_rip++;
         switch(op) {
             case IMM:
                 _rax = *_rip ++;
-                COUTASM("mov %_rip,_rax");
+                COUTASM("mov %rip,rax");
                 break;
             case LC:
                 _rax = *(char *)_rax;
-                COUTASM("LC _rax,_rax");
+                COUTASM("LC rax,rax");
                 break;
             case LI:
                 _rax = *(intptr_t *)_rax;
-                COUTASM("LI _rax,_rax");
+                COUTASM("LI rax,rax");
                 break;
             case SC:
                 _rax = *(char *)_rsp = _rax;
                 _rsp ++;
-                COUTASM("mov _rax,_rsp");
+                COUTASM("mov rax,rsp");
                 break;
             case SI:
                 *(intptr_t *)*_rsp = _rax;
                 _rsp ++;
-                COUTASM("mov _rax,_rsp");
+                COUTASM("mov rax,rsp");
                 break;
             case PUSH:
                 *--_rsp = _rax;
-                COUTASM("push _rax");
+                COUTASM("push rax");
                 break;
             case JMP:
                 _rip = (intptr_t *)*_rip;
-                COUTASM("JMP _rip");
+                COUTASM("JMP rip");
                 break;
             case JZ:
                 if (_rax != 0) {
@@ -1218,7 +1218,7 @@ int Interpreter::Eval() {
                 else {
                     _rip = (intptr_t *)*_rip;
                 }
-                COUTASM("JZ _rip");
+                COUTASM("JZ rip");
                 break;
             case JNZ:
                 if (_rax != 0) {
@@ -1227,7 +1227,7 @@ int Interpreter::Eval() {
                 else {
                     _rip ++;
                 }
-                COUTASM("JNZ _rip");
+                COUTASM("JNZ rip");
                 break;
             case CALL:
                 *--_rsp = (intptr_t)(_rip + 1);
@@ -1262,52 +1262,53 @@ int Interpreter::Eval() {
 #define OPERATOR_BREAK(op) _rax = *_rsp++ op _rax;break
             case OR:
                 OPERATOR_BREAK(|);
-                COUTASM("OR *_rsp,_rax");
+                COUTASM("OR rsp,rax");
             case XOR:
                 OPERATOR_BREAK(^);
-                COUTASM("XOR _rsp,_rax");
+                COUTASM("XOR rsp,rax");
             case AND:
                 OPERATOR_BREAK(&);
-                COUTASM("AND _rsp,_rax");
+                COUTASM("AND rsp,rax");
             case EQ:
                 OPERATOR_BREAK(==);
-                COUTASM("EQ _rsp,_rax");
+                COUTASM("EQ rsp,rax");
             case NE:
                 OPERATOR_BREAK(!=);
-                COUTASM("NE _rsp,_rax");
+                COUTASM("NE rsp,rax");
             case LT:
                 OPERATOR_BREAK(<);
-                COUTASM("LT _rsp,_rax");
+                COUTASM("LT rsp,rax");
             case LE:
                 OPERATOR_BREAK(<=);
-                COUTASM("LE _rsp,_rax");
+                COUTASM("LE rsp,rax");
             case GT:
                 OPERATOR_BREAK(>);
-                COUTASM("GT _rsp,_rax");
+                COUTASM("GT rsp,rax");
             case GE:
                 OPERATOR_BREAK(>=);
-                COUTASM("GE _rsp,_rax");
+                COUTASM("GE rsp,rax");
             case SHL:
                 OPERATOR_BREAK(<<);
-                COUTASM("SHL _rsp,_rax");
+                COUTASM("SHL rsp,rax");
             case SHR:
                 OPERATOR_BREAK(>>);
-                COUTASM("SHR _rsp,_rax");
+                COUTASM("SHR rsp,rax");
             case ADD:
                 OPERATOR_BREAK(+);
-                COUTASM("ADD _rsp,_rax");
+                COUTASM("ADD rsp,rax");
             case SUB:
                 OPERATOR_BREAK(-);
-                COUTASM("SUB _rsp,_rax");
+                COUTASM("SUB rsp,rax");
             case MUL:
                 OPERATOR_BREAK(*);
-                COUTASM("MUL _rsp,_rax");
+                COUTASM("MUL rsp,rax");
             case DIV:
                 OPERATOR_BREAK(/);
-                COUTASM("DIV _rsp,_rax");
+                COUTASM("DIV rsp,rax");
             case MOD:
                 OPERATOR_BREAK(%);
-                COUTASM("MOD _rsp,_rax");
+                COUTASM("MOD rsp,rax");
+#undef COUTASM
 #undef OPERATOR
             case EXIT:
                 if (*_rsp == 0){
@@ -1351,6 +1352,7 @@ int Interpreter::Eval() {
 int Interpreter::Run(std::string& file_content) {
     _line = 1;
 
+    symbols.clear();
     memset(_text, 0, _pool_size);
     memset(_data, 0, _pool_size);
     memset(_stack, 0, _pool_size);
