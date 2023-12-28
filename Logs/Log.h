@@ -43,4 +43,6 @@ private:
 };
 
 #define LOG Log::GetInstance()
+
+
 #endif // LOG_H

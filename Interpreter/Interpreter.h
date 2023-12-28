@@ -46,8 +46,9 @@ struct Symbol {
 enum { CHAR, INT, PTR };
 
 class Interpreter {
+    bool CLI = false;
 public:
-	Interpreter();
+	Interpreter(bool cli = false);
 	~Interpreter();
 	
 	int Run(std::string &file_content);

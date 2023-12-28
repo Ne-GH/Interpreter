@@ -1,6 +1,29 @@
 #include "Interpreter.h"
 #include "../RunWidget/RunWidget.h"
 #include <fstream>
+#include <iostream>
+
+template <typename T>
+void Output(T &&message,bool cli) {
+    if (cli) {
+        std::cout << message;
+        std::cout.flush();
+    }
+    else {
+        RUNRESULT.Output(std::string(message));
+    }
+}
+
+void Log(std::string message,bool cli) {
+    if (cli) {
+        // std::cerr << message << std::endl;
+    }
+    else {
+        LOG.AddErrorLog(message);
+    }
+
+}
+
 
 /*******************************************************************************
  * 词法分析
@@ -11,7 +34,8 @@ void Interpreter::Next() {
     intptr_t hash = 0;
 
     while (_token = *_src) {
-        LOG.AddLog("Next" + std::to_string(_token));
+//        LOG.AddLog();
+        Log("Next" + std::to_string(_token),CLI);
         _src++;
 
         // 变量
@@ -259,10 +283,10 @@ void Interpreter::Match(int token) {
         Next();
     }
     else {
-        LOG.AddErrorLog(
+        Log(
                 "在第" + std::to_string(_line) + "行,"
                 + "期望的_token为:" + std::to_string(token)
-                + "实际的_token为:" + std::to_string(_token));
+                + "实际的_token为:" + std::to_string(_token),CLI);
         exit(-1);
     }
 }
@@ -274,10 +298,12 @@ void Interpreter::Match(int token) {
 *******************************************************************************/
 void Interpreter::Expression(int level) {
     if (!_token) {
-        LOG.AddErrorLog(std::to_string(_line) + ":遇到EOF,意外结束");
+        Log(std::to_string(_line) + ":遇到EOF,意外结束",CLI);
+//        LOG.AddErrorLog();
         exit(-1);
     }
-    LOG.AddLog("Expression" + std::to_string(_token) + "level" + std::to_string(level));
+    Log("Expression" + std::to_string(_token) + "level" + std::to_string(level),CLI);
+//    LOG.AddLog();
     switch (_token) {
         case Num: {
             Match(Num);
@@ -362,7 +388,8 @@ void Interpreter::Expression(int level) {
                     *++_text = id->_value;
                 }
                 else {
-                    LOG.AddErrorLog(std::to_string(_line) + "错误的函数调用");
+                    Log(std::to_string(_line) + "错误的函数调用",CLI);
+//                    LOG.AddErrorLog();
                     exit(-1);
                 }
 
@@ -392,7 +419,8 @@ void Interpreter::Expression(int level) {
                     *++_text = id->_value;
                 }
                 else {
-                    LOG.AddErrorLog(std::to_string(_line) + "未定义的变量");
+                    Log(std::to_string(_line) + "未定义的变量",CLI);
+//                    LOG.AddErrorLog();
                     exit(-1);
                 }
 
@@ -433,7 +461,8 @@ void Interpreter::Expression(int level) {
                 _expr_type = _expr_type - PTR;
             }
             else {
-                LOG.AddErrorLog(std::to_string(_line) + "错误的解引用");
+                Log(std::to_string(_line) + "错误的解引用",CLI);
+//                LOG.AddErrorLog();
                 exit(-1);
             }
 
@@ -449,7 +478,8 @@ void Interpreter::Expression(int level) {
                 _text --;
             }
             else {
-                LOG.AddErrorLog(std::to_string(_line) + "错误的取地址");
+                Log(std::to_string(_line) + "错误的取地址",CLI);
+//                LOG.AddErrorLog();
                 exit(-1);
             }
 
@@ -525,7 +555,8 @@ void Interpreter::Expression(int level) {
                 *++_text = LI;
             }
             else {
-                LOG.AddErrorLog(std::to_string(_line) + "不可前置操作的左值");
+                Log(std::to_string(_line) + "不可前置操作的左值",CLI);
+//                LOG.AddErrorLog();
                 exit(-1);
             }
             *++_text = PUSH;
@@ -536,7 +567,8 @@ void Interpreter::Expression(int level) {
             break;
         }
         default:
-            LOG.AddErrorLog(std::to_string(_line) + "编译错误");
+            Log(std::to_string(_line) + "编译错误",CLI);
+//            LOG.AddErrorLog();
             exit(-1);
 
             break;
@@ -553,7 +585,8 @@ void Interpreter::Expression(int level) {
                     *_text = PUSH;
                 }
                 else {
-                    LOG.AddErrorLog(std::to_string(_line) + ":赋值时出现错误的左值");
+                    Log(std::to_string(_line) + ":赋值时出现错误的左值",CLI);
+//                    LOG.AddErrorLog();
                     exit(-1);
                 }
                 Expression(Assign);
@@ -571,7 +604,8 @@ void Interpreter::Expression(int level) {
                     Match(':');
                 }
                 else {
-                    LOG.AddErrorLog(std::to_string(_line) + ":三目运算符缺少':'");
+                    Log(std::to_string(_line) + ":三目运算符缺少':'",CLI);
+//                    LOG.AddErrorLog();
                     exit(-1);
                 }
                 *addr = (intptr_t)(_text + 3);
@@ -771,7 +805,8 @@ void Interpreter::Expression(int level) {
                     *++_text = LC;
                 }
                 else {
-                    LOG.AddErrorLog(std::to_string(_line) + ":错误的后置自增");
+                    Log(std::to_string(_line) + ":错误的后置自增",CLI);
+//                    LOG.AddErrorLog();
                     exit(-1);
                 }
 
@@ -800,7 +835,8 @@ void Interpreter::Expression(int level) {
                     *++_text = MUL;
                 }
                 else if (tmp_type < PTR) {
-                    LOG.AddErrorLog(std::to_string(_line) + ":期望得到指针类型");
+                    Log(std::to_string(_line) + ":期望得到指针类型",CLI);
+//                    LOG.AddErrorLog();
                     exit(-1);
                 }
                 _expr_type = tmp_type - PTR;
@@ -808,8 +844,9 @@ void Interpreter::Expression(int level) {
                 *++_text = (_expr_type == CHAR) ? LC : LI;
                 break;
             default:
-                    LOG.AddErrorLog(std::to_string(_line) + ":编译错误,_token = " + std::to_string(_token));
-                    exit(-1);
+                Log(std::to_string(_line) + ":编译错误,_token = " + std::to_string(_token),CLI);
+//                    LOG.AddErrorLog();
+                exit(-1);
                 break;
         }
 
@@ -830,7 +867,8 @@ void Interpreter::Statement() {
     // 6. Expression; (Expression end with semicolon)
 
     intptr_t *a = nullptr, *b = nullptr;
-    LOG.AddLog("Statement" + std::to_string(_token));
+    Log("Statement" + std::to_string(_token),CLI);
+//    LOG.AddLog();
     if (_token == If) {
         // if (...) <Statement> [else <Statement>]
         //
@@ -930,7 +968,8 @@ void Interpreter::EnumDeclaration() {
     intptr_t enum_val = 0;
     while (_token != '}') {
         if (_token != Id) {
-            LOG.AddErrorLog(std::to_string(_line) + ":错误enum标识符");
+            Log(std::to_string(_line) + ":错误enum标识符",CLI);
+//            LOG.AddErrorLog();
             exit(-1);
         }
         Next();
@@ -938,7 +977,8 @@ void Interpreter::EnumDeclaration() {
         if (_token == Assign) {
             Next();
             if (_token != Num) {
-                LOG.AddErrorLog(std::to_string(_line) + "错误的enum初始化值");
+                Log(std::to_string(_line) + "错误的enum初始化值",CLI);
+//                LOG.AddErrorLog();
                 exit(-1);
             }
             enum_val = token_val;
@@ -978,11 +1018,13 @@ void Interpreter::FunctionParameter() {
 
         // 参数名
         if (_token != Id) {
-            LOG.AddErrorLog(std::to_string(_line) + ":错误的参数声明");
+            Log(std::to_string(_line) + ":错误的参数声明",CLI);
+//            LOG.AddErrorLog();
             exit(-1);
         }
         if (current_id->_class == Loc) {
-            LOG.AddErrorLog(std::to_string(_line) + ":重复的参数声明");
+            Log(std::to_string(_line) + ":重复的参数声明",CLI);
+//            LOG.AddErrorLog();
             exit(-1);
         }
 
@@ -1019,11 +1061,13 @@ void Interpreter::FunctionBody() {
             }
 
             if (_token != Id) {
-                LOG.AddErrorLog(std::to_string(_line) + ":错误的本地变量声明");
+                Log(std::to_string(_line) + ":错误的本地变量声明",CLI);
+//                LOG.AddErrorLog();
                 exit(-1);
             }
             if (current_id->_class == Loc) {
-                LOG.AddErrorLog(std::to_string(_line) + "本地变量重复声明");
+                Log(std::to_string(_line) + "本地变量重复声明",CLI);
+//                LOG.AddErrorLog();
                 exit(-1);
             }
             Match(Id);
@@ -1129,11 +1173,13 @@ void Interpreter::GlobalDeclaration() {
 
         // 是否存在标识符
         if (_token != Id) {
-            LOG.AddErrorLog(std::to_string(_line) + ":错误的全局声明");
+            Log(std::to_string(_line) + ":错误的全局声明",CLI);
+//            LOG.AddErrorLog();
             exit(-1);
         }
         if (current_id->_class) {
-            LOG.AddErrorLog(std::to_string(_line) + ":重复的全局声明");
+            Log(std::to_string(_line) + ":重复的全局声明",CLI);
+//            LOG.AddErrorLog();
             exit(-1);
         }
         Match(Id);
@@ -1175,8 +1221,9 @@ void Interpreter::Program() {
 int Interpreter::Eval() {
 #define COUTASM(message) \
     if (_assembly == true) { \
-        RUNRESULT.Output(std::string(message) + "\n"); \
+        Output(std::string(message) + "\n",CLI);\
     }
+//        RUNRESULT.Output(std::string(message) + "\n");
 
     while (true) {
         intptr_t op = *_rip++;
@@ -1312,10 +1359,12 @@ int Interpreter::Eval() {
 #undef OPERATOR
             case EXIT:
                 if (*_rsp == 0){
-                    LOG.AddLog("exit(" + std::to_string(*_rsp) + ")");
+                    Log("exit(" + std::to_string(*_rsp) + ")",CLI);
+//                    LOG.AddLog();
                 }
                 else {
-                    LOG.AddErrorLog("exit(" + std::to_string(*_rsp) + ")");
+                    Log("exit(" + std::to_string(*_rsp) + ")",CLI);
+//                    LOG.AddErrorLog();
                 }
                 return *_rsp;
                 break;
@@ -1324,8 +1373,9 @@ int Interpreter::Eval() {
                 char buf[1024] = {0};
                 _rax = sprintf(buf,(char *)tmp[-1], tmp[-2], tmp[-3], tmp[-4], tmp[-5], tmp[-6]);
 
-                if (!_assembly)
-                    RUNRESULT.Output(std::string(buf));
+                if (!_assembly) {
+                    Output(std::string(buf),CLI);
+                }
                 break;
             }
             case MALC:
@@ -1342,7 +1392,8 @@ int Interpreter::Eval() {
 //        else if (op == OPEN) { _rax = open((char *)_rsp[1], _rsp[0]); }
 //        else if (op == CLOS) { _rax = close(*_rsp);}
 //        else if (op == READ) { _rax = read(_rsp[2], (char *)_rsp[1], *_rsp); }
-                LOG.AddErrorLog("未知的指令:" + std::to_string(op));
+//                LOG.AddErrorLog();
+                Log("未知的指令:" + std::to_string(op),CLI);
                 return -1;
                 break;
         }
@@ -1397,7 +1448,8 @@ int Interpreter::Run(std::string& file_content) {
         }
     }
     if (!(_rip = (intptr_t *)(main_id._value))) {
-        LOG.AddErrorLog("main 函数未定义\n");
+//        LOG.AddErrorLog();
+        Log("main 函数未定义\n",CLI);
         return -1;
     }
 
@@ -1412,7 +1464,7 @@ int Interpreter::Run(std::string& file_content) {
     return Eval();
 }
 
-Interpreter::Interpreter() {
+Interpreter::Interpreter(bool cli) : CLI(cli) {
     _delete_text = _text = (intptr_t *)new char[_pool_size];
     _delete_data = _data = (char *)new char[_pool_size];
     _delete_stack = _stack = (intptr_t *)new char[_pool_size];
@@ -1420,7 +1472,8 @@ Interpreter::Interpreter() {
     if (_text == nullptr || _data == nullptr
         || _stack == nullptr
         || _src == nullptr || _old_src == nullptr) {
-        LOG.AddErrorLog("为虚拟机分配内存失败");
+//        LOG.AddErrorLog();
+        Log("为虚拟机分配内存失败",CLI);
     }
 }
 Interpreter::~Interpreter() {
