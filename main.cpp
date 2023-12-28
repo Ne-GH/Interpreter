@@ -14,7 +14,7 @@ int main(int argc, char *argv[]) {
 
             while (std::getline(file,tmp))
                 file_str += tmp + '\n';
-            
+
             Interpreter interpreter(true);
             interpreter.SetMod(Interpreter::RUN);
             interpreter.Run(file_str);
