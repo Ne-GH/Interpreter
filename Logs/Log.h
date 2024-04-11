@@ -11,7 +11,7 @@ namespace Ui {
     class Log;
 }
 enum class HighLightType{
-    None,Wring,Error
+    None,Message,Wring,Error
 };
 class Log : public QDialog {
     Q_OBJECT
@@ -28,6 +28,7 @@ public:
     void AddLog(std::string,std::string log_type = "");
     void AddErrorLog(std::string);
     void AddWringLog(std::string);
+    void AddMessage(std::string);
     void Show();
     void Hide();
     std::string GetLogString();

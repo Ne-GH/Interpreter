@@ -12,7 +12,7 @@ namespace Ui {
 class RunResult : public QTextEdit {
     Q_OBJECT
 
-    int _only_read_length = 0;
+    int only_read_length_ = 0;
 
     void mousePressEvent(QMouseEvent *)       override { /* Ignore */ }
     void mouseDoubleClickEvent(QMouseEvent *) override { /* Ignore */ }
@@ -53,7 +53,7 @@ private:
     RunWidget& operator = (const RunWidget&);
 
     Ui::RunWidget *ui;
-    RunResult *_run_result;
+    RunResult *run_result_;
 
 };
 

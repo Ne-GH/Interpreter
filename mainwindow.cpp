@@ -3,7 +3,7 @@
 #include "Logs/Log.h"
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
-    , ui(new Ui::MainWindow), _file(this)
+    , ui(new Ui::MainWindow), file_(this)
 {
     ui->setupUi(this);
 
@@ -14,43 +14,43 @@ MainWindow::MainWindow(QWidget* parent)
     setCentralWidget(ui->file_edit);
 
     connect(ui->create_file, &QAction::triggered, [=] {
-        auto create_path = _file.Create();
-		_file.Read(create_path);
+        auto create_path = file_.Create();
+		file_.Read(create_path);
     });
     connect(ui->open_file, &QAction::triggered, [=] {
-        _file.Open();
-        ui->file_edit->setText(_file.GetContent().data());
+        file_.Open();
+        ui->file_edit->setText(file_.GetContent().data());
     });
 
     connect(ui->save_file, &QAction::triggered, [=] {
         std::string string = ui->file_edit->toPlainText().toStdString();
-        _file.Save(string);
+        file_.Save(string);
     });
     
     connect(ui->close_file, &QAction::triggered, [=] {
-        _file.Close();
+        file_.Close();
         ui->file_edit->setText("");
     
     });
-    connect(ui->run_action, &QAction::triggered, [=] {
+    connect(ui->run_action, &QAction::triggered, [&] {
         RunWidget::GetInstance().show();
         RunWidget::GetInstance().Clear();
-        _interpreter.SetMod(Interpreter::RUN);
-        _interpreter.Run(_file.GetContent());
+        interpreter_.SetMod(Interpreter::RUN);
+        interpreter_.Run(file_.GetContent());
 
     });
-    connect(ui->asm_action,&QAction::triggered,[=] {
+    connect(ui->asm_action,&QAction::triggered,[&] {
         RunWidget::GetInstance().show();
         RunWidget::GetInstance().Clear();
-        _interpreter.SetMod(Interpreter::ASM);
-        _interpreter.Run(_file.GetContent());
+        interpreter_.SetMod(Interpreter::ASM);
+        interpreter_.Run(file_.GetContent());
     });
     connect(ui->log_action, &QAction::triggered, [=] {
         LOG.Show();
     });
     
 
-    //_interpreter = std::make_shared<Interpreter>();
+    //interpreter_ = std::make_shared<Interpreter>();
     
     ui->create_file->setShortcut(QKeySequence("Ctrl+N"));
     ui->open_file->setShortcut(QKeySequence("Ctrl+O"));

@@ -16,13 +16,13 @@ void RunResult::Output(std::string out_message) {
     moveCursor(QTextCursor::End);
     insertPlainText(out_message.c_str());
     auto cur_cursor = textCursor();
-    _only_read_length = cur_cursor.position() - cur_cursor.block().position();
+    only_read_length_ = cur_cursor.position() - cur_cursor.block().position();
 }
 std::string RunResult::GetInput() {
     auto cur_cursor = textCursor();
     auto cur_block = cur_cursor.block();
     std::string input = cur_block.text().toStdString();
-    input.erase(0,_only_read_length);
+    input.erase(0,only_read_length_);
     insertPlainText("\n");
     return input;
 }
@@ -44,12 +44,12 @@ void RunResult::keyPressEvent(QKeyEvent *event) {
             break;
         case Qt::Key_Left:
         case Qt::Key_Backspace:
-            if (GetCursorPos() > _only_read_length) {
+            if (GetCursorPos() > only_read_length_) {
                 QTextEdit::keyPressEvent(event);
             }
             break;
         case Qt::Key_Home:
-            SetCursorPos(_only_read_length);
+            SetCursorPos(only_read_length_);
             break;
         case Qt::Key_Return:
         case Qt::Key_Enter:
@@ -74,16 +74,16 @@ RunWidget::RunWidget(QWidget *parent) :
     ui(new Ui::RunWidget)
 {
     ui->setupUi(this);
-    _run_result = new RunResult(this);
+    run_result_ = new RunResult(this);
     auto layout = new QGridLayout(this);
-    layout->addWidget(_run_result);
+    layout->addWidget(run_result_);
     layout->setContentsMargins(0,0,0,0);
     setContentsMargins(0,0,0,0);
     setWindowTitle("运行窗口");
     setWindowIcon(QIcon(":/Resource/terminal.png"));
 
-    connect(_run_result,&RunResult::Input,[=]{
-        _run_result->Output(_run_result->GetInput() ) ;
+    connect(run_result_,&RunResult::Input,[=]{
+        run_result_->Output(run_result_->GetInput() ) ;
     });
 
 
@@ -94,14 +94,14 @@ RunWidget::~RunWidget() {
 }
 
 RunResult &RunWidget::GetRunResult() {
-    return *_run_result;
+    return *run_result_;
 }
 
 
 RunWidget &RunWidget::GetInstance() {
-    static std::unique_ptr<RunWidget> _instance;
-    if (_instance == nullptr) {
-        _instance.reset(new RunWidget());
+    static std::unique_ptr<RunWidget> instance;
+    if (instance == nullptr) {
+        instance.reset(new RunWidget());
     }
-    return  *_instance;
+    return  *instance;
 }

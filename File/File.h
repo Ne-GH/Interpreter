@@ -9,9 +9,9 @@
 class File {
 	using Path = std::filesystem::path;
 
-	std::string _content;
-	Path _path;
-	QWidget* _window;
+	std::string content_;
+	Path path_;
+	QWidget* window_;
 public:
 	File() = default;
     File(QWidget* window);

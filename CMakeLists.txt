@@ -40,7 +40,7 @@ set(PROJECT_SOURCES
         )
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-    # Windows-specific code
+    add_definitions(/utf-8)
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
 #    set(CMAKE_CXX_COMPILER "/usr/local/gcc13/bin/g++")
     # Linux-specific code
@@ -71,7 +71,7 @@ else()
     endif()
 endif()
 
-target_link_libraries(Interpreter PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
+target_link_libraries(Interpreter PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Core)
 
 set_target_properties(Interpreter PROPERTIES
         MACOSX_BUNDLE_GUI_IDENTIFIER my.example.com

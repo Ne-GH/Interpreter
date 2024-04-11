@@ -29,15 +29,14 @@ enum {
 
 // 符号表
 struct Symbol {
-    int _token = 0;
-    intptr_t _hash = 0;
-    std::string _name = "";   // 标识符本身的字符串
-    int _type = 0;   // 标识符类型，CHAR/INT/PTR
-    int _class = 0;  // 标识符类型，局部/全局变量
-    intptr_t _value = 0;  // 标识符的值
-    int _backup_type = 0;
-    int _backup_class = 0;
-    intptr_t _backup_value = 0;
+    int token_ = 0;
+    std::string name = "";   // 标识符本身的字符串
+    int type = 0;   // 标识符类型，CHAR/INT/PTR
+    int symbol_class = 0;  // 标识符类型，局部/全局变量
+    intptr_t value = 0;  // 标识符的值
+    int backup_type = 0;
+    int backup_class = 0;
+    intptr_t backup_value = 0;
 };
 
 
@@ -57,34 +56,35 @@ public:
     };
     void SetMod(int mod) {
         if (mod == ASM) {
-            _assembly = true;
+            assembly_ = true;
         }
         else {
-            _assembly = false;
+            assembly_ = false;
         }
     }
 private:
-    bool _assembly = false;
-    int _pool_size = 1024*256;
-    int _token = 0;
-    int _line;
-    int _basetype;   // 声明类型
-    int _expr_type;  // 表达式类型
-    int _index_of_bp;
+    bool assembly_ = false;
+    int pool_size_ = 1024*256;
+    int token_ = 0;
+    int line_;
+    int basetype_;   // 声明类型
+    int exprtype_;  // 表达式类型
+    int index_of_bp_;
 
-    char *_data, *_src, *_old_src;
-    intptr_t *_text, *_stack;
-    intptr_t *_rip, *_rbp, *_rsp, _rax;
-
-
-    intptr_t token_val;
-    Symbol *current_id;
-    std::vector<Symbol> symbols;
+    char *data_, *src_, *old_src_;
+    intptr_t *text_, *stack_;
+    intptr_t *rip_, *rbp_, *rsp_, rax_;
 
 
+    intptr_t token_val_;
+    Symbol *current_id_;
+    // std::vector<Symbol> symbols_;
+    std::unordered_map<std::string,Symbol> symbols_map_;
 
-    char *_delete_data,*_delete_src;
-    intptr_t *_delete_text,*_delete_stack;
+
+
+    char *delete_data_,*delete_src_;
+    intptr_t *delete_text_,*delete_stack_;
 
     void Next();
     void Match(int tk);

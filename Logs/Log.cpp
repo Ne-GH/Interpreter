@@ -29,21 +29,12 @@ Log::~Log() {
 
 
 static string GetData(){
-#if defined(__GNUC__) && (__GNUC__ < 13)
-    auto now = std::chrono::system_clock::now();
-    auto time = std::chrono::system_clock::to_time_t(now);
-    std::stringstream ss;
-    ss << std::put_time(std::localtime(&time),"%Y/%m/%d %X");
-    string ret = ss.str();
-    return ret;
-#elif defined(__GNUC__) && (__GNUC__ >= 13)
     using namespace::std::chrono;
     return std::format("{:%T}",current_zone()->to_local(system_clock::now())).substr(0,8);
-#endif
 }
 
 void Log::AddLog(string message,string log_type) {
-    string log = GetData() + log_type + " : " + message;
+    string log = GetData() + " " + log_type + " : " + message;
     ui->log_edit->append(log.c_str());
 
     _flog << log + "\n";
@@ -68,7 +59,6 @@ static void HighLight_(QTextEdit *text_edit,const string& search_word,HighLightT
     switch (highlight_type) {
         case HighLightType::Wring :
             color_format.setForeground(Qt::black);   //字体颜色
-
             color_format.setBackground(Qt::yellow);  //背景颜色
             break;
 
@@ -76,6 +66,9 @@ static void HighLight_(QTextEdit *text_edit,const string& search_word,HighLightT
             color_format.setForeground(Qt::black);   //字体颜色
             color_format.setBackground(Qt::red);  //背景颜色
             break;
+        case HighLightType::Message :
+            color_format.setForeground(Qt::black);   //字体颜色
+            color_format.setBackground(Qt::green);  //背景颜色
 
         default:
             break;
@@ -96,6 +89,7 @@ static void HighLight_(QTextEdit *text_edit,const string& search_word,HighLightT
 void HighLight(QTextEdit *text_edit){
     HighLight_(text_edit,"Wring",HighLightType::Wring);
     HighLight_(text_edit,"Error",HighLightType::Error);
+    HighLight_(text_edit,"Message",HighLightType::Message);
 
     return;
 }
@@ -106,7 +100,9 @@ void Log::AddErrorLog(std::string error_message) {
 void Log::AddWringLog(std::string wring_message) {
     AddLog(std::move(wring_message),"[Wring]");
 }
-
+void Log::AddMessage(std::string message) {
+    AddLog(std::move(message), "[Message]");
+}
 
 void Log::Show() {
     show();

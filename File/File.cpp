@@ -12,36 +12,36 @@ void StringPathToWStringPath(std::filesystem::path& path) {
 }
 
 auto File::GetPath() -> Path{
-	return _path;
+	return path_;
 }
 
 std::string& File::GetContent() {
-	return _content;
+	return content_;
 }
-File::File(QWidget* window) :_window(window) {  }
+File::File(QWidget* window) :window_(window) {  }
 
 auto File::Create() -> Path {
-	_path = QFileDialog::getSaveFileName(_window,
+	path_ = QFileDialog::getSaveFileName(window_,
 		"创建文件",
 		".", 
 		"C语言文件(*.c);;All Files (*)").toStdString();
 
 #if defined(_WIN32) || defined(_WIN64)
-	StringPathToWStringPath(_path);
+	StringPathToWStringPath(path_);
 #endif
-	std::fstream file_system(_path,std::ios::in | std::ios::out | std::ios::trunc);
-	return _path;
+	std::fstream file_system(path_,std::ios::in | std::ios::out | std::ios::trunc);
+	return path_;
 }
 
 void File::Open() {
-	_path = QFileDialog::getOpenFileName(
+	path_ = QFileDialog::getOpenFileName(
 		nullptr,
 		"打开文件",
 		"/",
 		"C文件(*.c);;所有文件(*.*)").toStdString();
 
 #if defined(_WIN32) || defined(_WIN64)
-	StringPathToWStringPath(_path);
+	StringPathToWStringPath(path_);
 #endif
 
 
@@ -49,33 +49,34 @@ void File::Open() {
 }
 
 void File::Read() {
-	_content.clear();
-	if (_path.empty()) {
+	content_.clear();
+	if (path_.empty()) {
 		return;
 	}
-	std::fstream file_stream(_path);
+	std::fstream file_stream(path_);
 	std::string line;
 	while (std::getline(file_stream, line)) {
-		_content += line + "\n";
+		content_ += line + "\n";
 	}
 }
 void File::Read(Path file_path) {
-	_path = file_path;
+	path_ = file_path;
 	Read();
 }
 
 void File::Save(std::string_view updata_text) {
-	if (_path.empty()) {
-		_path = Create();
+	if (path_.empty()) {
+		path_ = Create();
 	}
-	std::fstream file_system(_path);
+	std::fstream file(path_);
+	file << updata_text;
 
-    _content = updata_text;
+    content_ = updata_text;
 
 }
 
 void File::Close() {
-	_path.clear();
-	_content.clear();
+	path_.clear();
+	content_.clear();
 }
 
